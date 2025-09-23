@@ -179,11 +179,28 @@ const DoctorAppointments: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
+    <Box sx={{ 
+      minHeight: '100vh', 
+      width: '100vw',
+      maxWidth: '100%',
+      overflowX: 'hidden',
+      bgcolor: 'background.default'
+    }}>
+    <Container 
+      maxWidth={false} 
+      sx={{ 
+        py: 3, 
+        px: { xs: 2, sm: 3, md: 4 },
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        style={{ flex: 1 }}
       >
         {/* Header */}
         <Box sx={{ mb: 4 }}>
@@ -474,6 +491,7 @@ const DoctorAppointments: React.FC = () => {
         )}
       </motion.div>
     </Container>
+    </Box>
   );
 };
 

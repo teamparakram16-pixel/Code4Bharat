@@ -1,5 +1,41 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import useRoutineConsultation from '@/hooks/useRoutineConsultation/useRoutineConsultation';
+import type { 
+  PrakritiData,
+  RoutineItem,
+} from '@/types/RoutineConsultation.types';
+
+interface RoutinesConsultation {
+  id: string;
+  date: string;
+  time: string;
+  patient: {
+    name: string;
+    age: number;
+    gender: string;
+    phone: string;
+    email: string;
+  };
+  prakritiData: PrakritiData;
+  healthMetrics: {
+    bmi: number;
+    bloodPressure: string;
+    heartRate: number;
+    sleepQuality: number;
+    stressLevel: number;
+    energyLevel: number;
+  };
+  goals: string[];
+  concerns: string[];
+  notes: string;
+  sharedRoutine?: RoutineItem[];
+  doctorNotes?: string;
+  status: 'pending' | 'routine_shared' | 'completed';
+  updatedAt?: string;
+}
 import { useParams, useNavigate } from 'react-router-dom';
+import { styled } from '@mui/material/styles';
 import {
   Box,
   Typography,
@@ -48,104 +84,19 @@ import {
 import { motion } from 'framer-motion';
 import dayjs from 'dayjs';
 
-interface Patient {
-  id: string;
-  name: string;
-  age: number;
-  gender: string;
-  phone: string;
-  email: string;
-  address: string;
-  avatar?: string;
-}
-
-interface PrakritiData {
-  vata: number;
-  pitta: number;
-  kapha: number;
-  dominantDosha: 'vata' | 'pitta' | 'kapha';
-  assessmentDate: string;
-}
-
-interface HealthMetrics {
-  bmi: number;
-  bloodPressure: string;
-  heartRate: number;
-  sleepQuality: number; // 1-10 scale
-  stressLevel: number; // 1-10 scale
-  energyLevel: number; // 1-10 scale
-}
-
-interface RoutineItem {
-  id: string;
-  category: 'exercise' | 'diet' | 'lifestyle' | 'meditation';
-  title: string;
-  description: string;
-  duration: string;
-  frequency: string;
-  instructions: string;
-}
-
-interface RoutinesConsultation {
-  id: string;
-  patient: Patient;
-  date: string;
-  time: string;
-  status: 'pending' | 'routine_shared' | 'completed';
-  urgency: 'low' | 'medium' | 'high';
-  goals: string[];
-  concerns: string[];
-  notes: string;
-  prakritiData: PrakritiData;
-  healthMetrics: HealthMetrics;
-  sharedRoutine?: RoutineItem[];
-  doctorNotes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Mock data
-const mockRoutinesConsultation: RoutinesConsultation = {
-  id: '2',
-  patient: {
-    id: 'p2',
-    name: 'Priya Sharma',
-    age: 28,
-    gender: 'Female',
-    phone: '+91 87654 32109',
-    email: 'priya.sharma@email.com',
-    address: '456 Brigade Road, Bangalore, Karnataka 560025',
-  },
-  date: '2024-03-20',
-  time: '11:30 AM',
-  status: 'pending',
-  urgency: 'medium',
-  goals: ['Weight management', 'Stress reduction', 'Better sleep', 'Increased energy'],
-  concerns: ['Irregular sleep patterns', 'Digestive issues', 'Work stress', 'Low energy'],
-  notes: 'Looking for a personalized Ayurvedic routine to improve overall health and well-being. Work schedule is demanding with irregular hours. Interested in meditation and yoga practices.',
-  prakritiData: {
-    vata: 65,
-    pitta: 70,
-    kapha: 25,
-    dominantDosha: 'pitta',
-    assessmentDate: '2024-03-15',
-  },
-  healthMetrics: {
-    bmi: 22.5,
-    bloodPressure: '120/80',
-    heartRate: 72,
-    sleepQuality: 4,
-    stressLevel: 7,
-    energyLevel: 5,
-  },
-  createdAt: '2024-03-19T16:45:00Z',
-  updatedAt: '2024-03-19T16:45:00Z',
-};
+const HiddenInput = styled('input')({
+  display: 'none'
+});
 
 const RoutinesConsultationDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [consultation, setConsultation] = useState<RoutinesConsultation | null>(null);
+  const [responseText, setResponseText] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
   const [shareRoutineDialogOpen, setShareRoutineDialogOpen] = useState(false);
   const [routineItems, setRoutineItems] = useState<RoutineItem[]>([]);
   const [doctorNotes, setDoctorNotes] = useState('');
@@ -158,22 +109,119 @@ const RoutinesConsultationDetails: React.FC = () => {
     instructions: '',
   });
 
-  useEffect(() => {
-    // Simulate API call to fetch consultation details
-    setConsultation(mockRoutinesConsultation);
-  }, [id]);
+  const { getRoutineAppointmentById } = useRoutineConsultation();
 
-  const handleShareRoutine = () => {
-    if (consultation) {
-      setConsultation({
-        ...consultation,
-        status: 'routine_shared',
-        sharedRoutine: routineItems,
-        doctorNotes,
-        updatedAt: new Date().toISOString(),
-      });
-      setShareRoutineDialogOpen(false);
-      // Here you would make an API call to update the consultation
+  useEffect(() => {
+    const fetchConsultation = async () => {
+      if (!id) return;
+      setLoading(true);
+      try {
+        const apiData = await getRoutineAppointmentById(id);
+        
+        // Transform API data to match our component's needs
+        const transformedData: RoutinesConsultation = {
+          id: apiData.id,
+          date: apiData.appointmentData.date || apiData.createdAt,
+          time: apiData.appointmentData.time || new Date(apiData.createdAt).toLocaleTimeString(),
+          patient: {
+            name: apiData.user.profile.fullName,
+            age: apiData.user.profile.age,
+            gender: apiData.user.profile.gender,
+            phone: apiData.user.profile.contactNo,
+            email: apiData.user.email
+          },
+          prakritiData: apiData.prakritiData,
+          healthMetrics: {
+            bmi: apiData.appointmentData.bmi || 0,
+            bloodPressure: apiData.appointmentData.bloodPressure || 'N/A',
+            heartRate: apiData.appointmentData.heartRate || 0,
+            sleepQuality: apiData.appointmentData.sleepQuality || 0,
+            stressLevel: apiData.appointmentData.stressLevel || 0,
+            energyLevel: apiData.appointmentData.energyLevel || 0
+          },
+          goals: apiData.appointmentData.goals || [],
+          concerns: apiData.appointmentData.concerns || [],
+          notes: apiData.appointmentData.notes || '',
+          status: apiData.status,
+          sharedRoutine: apiData.routineResponse?.sharedRoutine,
+          doctorNotes: apiData.routineResponse?.doctorNotes
+        };
+
+        setConsultation(transformedData);
+        
+        // Set routine items and notes if available
+        if (apiData.routineResponse?.sharedRoutine) {
+          setRoutineItems(apiData.routineResponse.sharedRoutine);
+        }
+        if (apiData.routineResponse?.doctorNotes) {
+          setDoctorNotes(apiData.routineResponse.doctorNotes);
+        }
+      } catch (error: any) {
+        toast.error(error.message || "Failed to fetch consultation details");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchConsultation();
+  }, [id, getRoutineAppointmentById]);
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === 'application/pdf') {
+      try {
+        setSelectedFile(file);
+        setError(null);
+      } catch (err: any) {
+        toast.error(err.message || 'Error processing PDF file');
+        setError('Error processing PDF file');
+        setSelectedFile(null);
+      }
+    } else {
+      toast.error('Please select a valid PDF file');
+      setError('Please select a valid PDF file');
+      setSelectedFile(null);
+    }
+  };
+
+  const { respondToRoutineAppointment } = useRoutineConsultation();
+
+  const handleResponseSubmit = async () => {
+    if (!consultation) {
+      toast.error('Consultation details not found');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError(null);
+
+      const formData = new FormData();
+      if (selectedFile) {
+        formData.append('file', selectedFile);
+      }
+      formData.append('text', responseText);
+      formData.append('routineItems', JSON.stringify(routineItems));
+      formData.append('doctorNotes', doctorNotes);
+
+      const result = await respondToRoutineAppointment(consultation.id, formData);
+      
+      if (result) {
+        setConsultation({
+          ...consultation,
+          status: 'completed',
+          updatedAt: new Date().toISOString(),
+        });
+        
+        toast.success('Response submitted successfully');
+        setShowDialog(false);
+        setResponseText('');
+        setSelectedFile(null);
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to submit response');
+      setError(err.message || 'An error occurred');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -241,10 +289,13 @@ const RoutinesConsultationDetails: React.FC = () => {
     }
   };
 
-  if (!consultation) {
+  const [loading, setLoading] = useState(true);
+
+  if (loading || consultation === null) {
     return (
       <Container maxWidth="lg" sx={{ py: 3 }}>
         <Typography variant="h6">Loading consultation details...</Typography>
+        <LinearProgress sx={{ mt: 2 }} />
       </Container>
     );
   }
@@ -695,16 +746,16 @@ const RoutinesConsultationDetails: React.FC = () => {
 
               {/* Action Button */}
               {consultation.status === 'pending' && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', pt: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, pt: 3 }}>
                   <Button
                     variant="contained"
-                    color="secondary"
+                    color="primary"
                     size="large"
                     startIcon={<Share />}
-                    onClick={() => setShareRoutineDialogOpen(true)}
+                    onClick={() => setShowDialog(true)}
                     sx={{ px: 4 }}
                   >
-                    Share Personalized Routine
+                    Send Response
                   </Button>
                 </Box>
               )}
@@ -871,13 +922,87 @@ const RoutinesConsultationDetails: React.FC = () => {
               Cancel
             </Button>
             <Button 
-              onClick={handleShareRoutine} 
+              onClick={() => {
+                if (consultation) {
+                  setConsultation({
+                    ...consultation,
+                    status: 'routine_shared',
+                    sharedRoutine: routineItems,
+                    doctorNotes,
+                    updatedAt: new Date().toISOString(),
+                  });
+                  setShareRoutineDialogOpen(false);
+                }
+              }} 
               variant="contained" 
               color="secondary"
               startIcon={<Share />}
               disabled={routineItems.length === 0}
             >
               Share Routine
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Response Dialog */}
+        <Dialog
+          open={showDialog}
+          onClose={() => setShowDialog(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Send Response</DialogTitle>
+          <DialogContent>
+            <Box sx={{ my: 2 }}>
+              {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {error}
+                </Alert>
+              )}
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                label="Your Response"
+                value={responseText}
+                onChange={(e) => setResponseText(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+              <Box>
+                <HiddenInput
+                  accept="application/pdf"
+                  id="upload-pdf"
+                  type="file"
+                  onChange={handleFileChange}
+                />
+                <label htmlFor="upload-pdf">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<Add />}
+                  >
+                    Upload PDF
+                  </Button>
+                </label>
+                {selectedFile && (
+                  <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2">{selectedFile.name}</Typography>
+                    <IconButton size="small" onClick={() => setSelectedFile(null)}>
+                      <Delete />
+                    </IconButton>
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowDialog(false)}>Cancel</Button>
+            <Button
+              onClick={handleResponseSubmit}
+              variant="contained"
+              disabled={isSubmitting || (!responseText && !selectedFile)}
+            >
+              {isSubmitting ? 'Sending...' : 'Send Response'}
             </Button>
           </DialogActions>
         </Dialog>

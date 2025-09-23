@@ -31,7 +31,9 @@ import {
   Report,
   Edit,
   Delete,
+  VolumeUp,
 } from "@mui/icons-material";
+import TextToSpeech from "../../TextToSpeech/TextToSpeech";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { useState, useRef, FC } from "react";
@@ -387,6 +389,11 @@ const GeneralPostCard: FC<GeneralPostCardProps> = ({
                 <Share />
               </ActionButton>
             </Tooltip>
+
+            <TextToSpeech 
+              text={post.description} 
+              label={`Read "${post.title}" aloud`} 
+            />
           </Box>
 
           {/* Right side - Bookmark and Views (only for author) */}

@@ -65,8 +65,7 @@ import UserChangePassword from "./pages/ChangePassword/UserChangePassword/UserCh
 import UpdatePostForm from "./components/Forms/Expert/UpdatePostForm/UpdatePostForm";
 import UpdateRoutineForm from "./components/Forms/Expert/UpdateRoutineForm/UpdateRoutineForm";
 import DoctorAppointments from "./pages/Expert/DoctorAppointments/DoctorAppointments";
-// import ConsultationDetails from "./pages/Expert/ConsultationDetails/ConsultationDetails";
-// import RoutinesConsultationDetails from "./pages/Expert/RoutinesConsultationDetails/RoutinesConsultationDetails";
+import MarketplacePage from "./pages/Marketplace/MarketplacePage";
 import MeetingManagement from "./pages/MeetingManagement/MeetingManagement";
 import UserAppointmentsPage from "./pages/User/UserAppointments/UserAppointmentsPage";
 import ConsultationDetails from "./pages/Expert/ConsultationDetails/ConsultationDetails";
@@ -106,6 +105,7 @@ const App = () => {
           <Route path="/contact-us" element={<ContactUs />} />
           <Route path="/terms-and-conditions" element={<TermsNConditions />} />
           <Route path="/cookie-policy" element={<CookiePolicy />} />
+          <Route path="/marketplace" element={<MarketplacePage />} />
 
           <Route path="/learn-more" element={<LearnMore />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />

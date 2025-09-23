@@ -8,30 +8,35 @@ import {
   BookmarkBorder, 
   Visibility 
 } from "@mui/icons-material";
+import TextToSpeech from "../../../TextToSpeech/TextToSpeech";
 import { useTheme } from "@mui/material/styles";
 
-export const PostActions = ({
+interface PostActionsProps {
+  liked: boolean;
+  likeCount: number;
+  commentCount: number;
+  viewCount: number;
+  saved: boolean;
+  isAuthor: boolean;
+  description: string;
+  toggleLike: () => void;
+  handleCommentClick: () => void;
+  handleShareClick: (event: React.MouseEvent<HTMLElement>) => void;
+  toggleSave: () => void;
+}
+
+export const PostActions: React.FC<PostActionsProps> = ({
   liked,
   likeCount,
   commentCount,
   viewCount,
   saved,
   isAuthor,
+  description,
   toggleLike,
   handleCommentClick,
   handleShareClick,
   toggleSave
-}: {
-  liked: boolean,
-  likeCount: number,
-  commentCount: number,
-  viewCount: number,
-  saved: boolean,
-  isAuthor: boolean,
-  toggleLike: () => void,
-  handleCommentClick: () => void,
-  handleShareClick: (event: React.MouseEvent<HTMLElement>) => void,
-  toggleSave: () => void
 }) => {
   const theme = useTheme();
   
@@ -86,6 +91,11 @@ export const PostActions = ({
               <Share />
             </IconButton>
           </Tooltip>
+
+          <TextToSpeech 
+            text={description} 
+            label="Read success story aloud"
+          />
         </Box>
         
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

@@ -172,6 +172,7 @@ const SuccessStoryPostCard: FC<
         viewCount={viewCount}
         saved={saved}
         isAuthor={successStoryPost.owner._id === currentUserId}
+        description={`Success story: ${successStoryPost.title}. ${successStoryPost.description}`}
         toggleLike={toggleLike}
         handleCommentClick={handleCommentClick}
         handleShareClick={handleShareClick}
