@@ -217,75 +217,75 @@ const server = app.listen(port, () => {
   console.log("Server listening on port: ", port);
 });
 
-const io = new Server(server, {
-  pingTimeout: 60000,
-  cors: {
-    origin: ["http://localhost:5173", "https://arogyapaths.netlify.app"],
-  },
-});
+// const io = new Server(server, {
+//   pingTimeout: 60000,
+//   cors: {
+//     origin: ["http://localhost:5173", "https://arogyapaths.netlify.app"],
+//   },
+// });
 
-io.on("connection", (socket) => {
-  // Handle events from the client
-  socket.on("setup", (userData) => {
-    socket.user = userData;
-    socket.join(userData._id);
-  });
+// io.on("connection", (socket) => {
+//   // Handle events from the client
+//   socket.on("setup", (userData) => {
+//     socket.user = userData;
+//     socket.join(userData._id);
+//   });
 
-  socket.on("join chat", (room) => {
-    socket.join(room);
-  });
+//   socket.on("join chat", (room) => {
+//     socket.join(room);
+//   });
 
-  // Handle chat messages
-  socket.on("chatMessage", async ({ message, chatId }) => {
-    const user = socket.user;
+//   // Handle chat messages
+//   socket.on("chatMessage", async ({ message, chatId }) => {
+//     const user = socket.user;
 
-    if (!user) {
-      socket.emit("error", "User not authenticated");
-      return;
-    }
+//     if (!user) {
+//       socket.emit("error", "User not authenticated");
+//       return;
+//     }
 
-    const chat = await Chat.findById({
-      _id: chatId,
-      participants: { $elemMatch: { user: user._id } },
-    });
+//     const chat = await Chat.findById({
+//       _id: chatId,
+//       participants: { $elemMatch: { user: user._id } },
+//     });
 
-    if (!chat) {
-      socket.emit("error", "Chat not found");
-      return;
-    }
-    const roomId = chatId;
-    const senderType = user.role === "expert" ? "Expert" : "User";
-    const senderId = user._id;
+//     if (!chat) {
+//       socket.emit("error", "Chat not found");
+//       return;
+//     }
+//     const roomId = chatId;
+//     const senderType = user.role === "expert" ? "Expert" : "User";
+//     const senderId = user._id;
 
-    // Save message to MongoDB
-    const newMessage = new Message({
-      senderType: senderType,
-      sender: senderId,
-      content: message,
-      chat: roomId,
-    });
+//     // Save message to MongoDB
+//     const newMessage = new Message({
+//       senderType: senderType,
+//       sender: senderId,
+//       content: message,
+//       chat: roomId,
+//     });
 
-    await newMessage.save();
+//     await newMessage.save();
 
-    chat.latestMessage = newMessage._id;
-    await chat.save();
+//     chat.latestMessage = newMessage._id;
+//     await chat.save();
 
-    // Emit to all clients in the room
-    io.to(roomId).emit("newMessage", {
-      _id: newMessage._id,
-      sender: {
-        _id: user._id,
-        profile: {
-          fullName: user.profile.fullName,
-          profilePicture: user.profile.profilePicture,
-        },
-      },
-      content: message,
-      createdAt: newMessage.createdAt,
-    });
-  });
+//     // Emit to all clients in the room
+//     io.to(roomId).emit("newMessage", {
+//       _id: newMessage._id,
+//       sender: {
+//         _id: user._id,
+//         profile: {
+//           fullName: user.profile.fullName,
+//           profilePicture: user.profile.profilePicture,
+//         },
+//       },
+//       content: message,
+//       createdAt: newMessage.createdAt,
+//     });
+//   });
 
-  socket.on("disconnect", () => {
-    console.log("A user disconnected:", socket.id);
-  });
-});
+//   socket.on("disconnect", () => {
+//     console.log("A user disconnected:", socket.id);
+//   });
+// });
