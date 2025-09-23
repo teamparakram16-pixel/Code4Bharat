@@ -53,13 +53,13 @@ router.get("/:postId", isLoggedIn, wrapAsync(postController.getPostById));
 
 router.delete(
   "/:postId",
-  // checkExpertLogin,
+  checkExpertLogin,
   wrapAsync(postController.deletePost)
 );
 
 router.put(
   "/:postId",
-  // checkExpertLogin,
+  checkExpertLogin,
   validatePost,
   wrapAsync(postController.updatePost)
 );

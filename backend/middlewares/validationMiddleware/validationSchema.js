@@ -311,7 +311,7 @@ export const razorpayPaymentSchema = z.object({
 });
 
 // -------------------- Medical Routine Appointment Schema --------------------
-export const MedicalRoutineAppointmentSchema = z.object({
+export const medicalRoutineAppointmentSchema = z.object({
   profession: z.string(),
   dailyRoutineDescription: z.string(),
   primaryHealthIssues: z.string(),
@@ -351,5 +351,5 @@ export default {
   expertSignupSchema,
   loginSchema,
   razorpayPaymentSchema,
-  MedicalRoutineAppointmentSchema,
+  medicalRoutineAppointmentSchema,
 };
