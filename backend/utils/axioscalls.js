@@ -11,7 +11,7 @@ const axiosInstance = axios.create({
     baseURL : endpoint,
     headers:{
         "Ocp-Apim-Subscription-Key": subscriptionKey,
-        "Content-Type": "Application/json",
+        "Content-Type": "application/json",
     },
 });
 
