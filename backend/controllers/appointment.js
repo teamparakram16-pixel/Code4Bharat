@@ -128,3 +128,24 @@ export const updateAppointmentStatus = wrapAsync(async (req, res) => {
     appointment,
   });
 });
+
+// ================================
+// Verify meeting link
+// ================================
+export const verifyMeetLink = wrapAsync(async (req, res) => {
+  const { meetId } = req.params;
+
+  const appointment = await Appointment.findOne({ meetId });
+
+  if (!appointment) {
+    return res.status(404).json({ message: "no such appointments found" }); // appointment not found
+  }
+
+  // Check if link is still valid
+  if (appointment.linkExpiresAt < new Date()) {
+    return res.status(403).json({ message: "expired" }); // link expired
+  }
+
+  // If valid
+  return res.status(200).json({ message: "success" });
+});

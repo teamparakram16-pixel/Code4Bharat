@@ -5,6 +5,7 @@ import {
   getAppointmentByMeetId,
   createAppointment,
   updateAppointmentStatus,
+  verifyMeetLink
 } from "../controllers/appointment.js";
 
 
@@ -24,5 +25,8 @@ router.get("/consultation/:meetId",  getAppointmentByMeetId);
 
 // Update appointment status (accept/reject)
 router.patch("/consultation/:appointmentId/status",  updateAppointmentStatus);
+// Verify meeting link
+router.get("/verify/:meetId", verifyMeetLink);
+
 
 export default router;
