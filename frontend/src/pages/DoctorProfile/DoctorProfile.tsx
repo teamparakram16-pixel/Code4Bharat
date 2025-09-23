@@ -12,9 +12,9 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import { 
+import {
   CalendarMonth as ConsultationIcon,
-  FitnessCenter as RoutineIcon 
+  FitnessCenter as RoutineIcon
 } from "@mui/icons-material";
 
 import ProfileHeader from "@/components/DoctorProfile/ProfileHeader/ProfileHeader";
@@ -43,23 +43,23 @@ const DoctorProfile: React.FC = () => {
   const [postsError, setPostsError] = useState("");
 
   const [activeTab, setActiveTab] = useState(0);
-  
+
   // State for appointment menu
   const [appointmentMenuAnchor, setAppointmentMenuAnchor] = useState<null | HTMLElement>(null);
   const isAppointmentMenuOpen = Boolean(appointmentMenuAnchor);
-
   useEffect(() => {
     if (doctor?.posts?.length) {
       const fetchPosts = async () => {
         setPostsLoading(true);
         setPostsError("");
         try {
-          const data = await getPostById(doctor.posts as any);
-          if (data && data.posts) {
-            setPosts(data.posts);
-          } else {
-            setPostsError("Failed to fetch posts");
-          }
+          const fetchedPosts = await Promise.all(
+            doctor.posts.map((postId: string) => getPostById(postId))
+          );
+
+          // getPostById returns { post, success, message }
+          const postsData = fetchedPosts.map(res => res?.post).filter(Boolean);
+          setPosts(postsData);
         } catch (error: any) {
           setPostsError(error.message || "Unexpected error");
         } finally {
@@ -71,6 +71,8 @@ const DoctorProfile: React.FC = () => {
       setPosts([]);
     }
   }, [doctor]);
+
+
 
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -269,7 +271,7 @@ const DoctorProfile: React.FC = () => {
               },
             ],
             email: doctor.email,
-            phone: doctor.profile?.contactNo?.toString() || "" ,
+            phone: doctor.profile?.contactNo?.toString() || "",
             hospital: doctor.profile?.address?.clinicAddress || "",
             location: `${doctor.profile?.address?.city || ""}, ${doctor.profile?.address?.state || ""}`,
 

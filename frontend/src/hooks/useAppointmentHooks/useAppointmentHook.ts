@@ -104,6 +104,27 @@ export const useAppointmentsHooks = () => {
       setLoading(false);
     }
   };
+  // 📌 Get Appointment by Meet ID
+const getAppointmentByMeetId = async (meetId: string): Promise<{ appointment: any; linkExpired: boolean }> => {
+  try {
+    setLoading(true);
+    setError(null);
+
+    const response = await api.get(`${import.meta.env.VITE_SERVER_URL}/api/appointment/consultation/${meetId}`);
+    return response.data;
+  } catch (err: any) {
+    setError(
+      err.response?.data?.message || err.message || "Failed to fetch appointment by Meet ID"
+    );
+    toast.error(
+      err.response?.data?.message || err.message || "Error fetching appointment by Meet ID"
+    );
+    throw err;
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return {
     loading,
@@ -111,5 +132,6 @@ export const useAppointmentsHooks = () => {
     createAppointment,
     getUserAppointments,
     getExpertAppointments,
+    getAppointmentByMeetId
   };
 };
