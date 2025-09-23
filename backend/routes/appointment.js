@@ -68,7 +68,7 @@ router.patch(
 
 // Get all appointments for logged-in user
 
-router.get("/consulations/user", checkUserLogin, getUserAppointments);
+router.get("/consultations/user", checkUserLogin, getUserAppointments);
 
 // Get all appointments for logged-in doctor/expert
 router.get("/consultations/expert", checkExpertLogin, getExpertAppointments);
