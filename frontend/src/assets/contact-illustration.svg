@@ -1,0 +1,14 @@
+<svg width="500" height="400" viewBox="0 0 500 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 200C0 89.543 89.543 0 200 0H300C410.457 0 500 89.543 500 200V200C500 310.457 410.457 400 300 400H200C89.543 400 0 310.457 0 200V200Z" fill="url(#paint0_linear_1_3)"/>
+  <path d="M125 150C125 133.431 138.431 120 155 120H345C361.569 120 375 133.431 375 150V250C375 266.569 361.569 280 345 280H155C138.431 280 125 266.569 125 250V150Z" fill="white"/>
+  <path d="M125 150C125 133.431 138.431 120 155 120H345C361.569 120 375 133.431 375 150V160L250 220L125 160V150Z" fill="#E1E5EE"/>
+  <circle cx="250" cy="200" r="40" fill="#6C63FF"/>
+  <path d="M240 195L260 195L260 205L240 205L240 195Z" fill="white"/>
+  <path d="M250 205L260 215L240 215L250 205Z" fill="white"/>
+  <defs>
+    <linearGradient id="paint0_linear_1_3" x1="250" y1="0" x2="250" y2="400" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6C63FF"/>
+      <stop offset="1" stop-color="#3F3D56"/>
+    </linearGradient>
+  </defs>
+</svg>
