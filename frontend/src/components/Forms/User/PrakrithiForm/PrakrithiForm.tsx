@@ -87,7 +87,7 @@ const PrakrithiForm = forwardRef<PrakritiFormRef, PrakrithiAnalysisFormProps>(({
       const demoArray = type === 'valid' ? demoPrakritiData.valid : demoPrakritiData.invalid;
       const selectedDemo = demoArray[Math.floor(Math.random() * demoArray.length)];
       
-      reset(selectedDemo);
+      reset(selectedDemo as any);
       
       // Reset to first section when filling demo data
       setCurrentSection(1);

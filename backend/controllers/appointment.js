@@ -1,9 +1,8 @@
-// controllers/appointmentController.js
-import Appointment from "../models/Appointment.js";
-import Prakriti from "../models/Prakriti.js";
+import Appointment from "../models/Appointment/Appointment.js";
+import Prakriti from "../models/Prakrathi/Prakrathi.js";
 import { customAlphabet } from "nanoid";
 import wrapAsync from "../utils/wrapAsync.js";
-import RoutineAppointment from "../models/RoutineAppointment.js";
+import RoutineAppointment from "../models/RoutineAppointment/RoutineAppointment.js";
 import ExpressError from "../utils/expressError.js";
 
 const nanoid = customAlphabet(

@@ -17,7 +17,7 @@ const useUserAuth = () => {
         {
           email,
           password,
-          role: "user",
+          role: "User",
         }
       );
 

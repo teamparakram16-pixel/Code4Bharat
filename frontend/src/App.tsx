@@ -64,6 +64,10 @@ import ExpertChangePassword from "./pages/ChangePassword/ExpertChangePassword/Ex
 import UserChangePassword from "./pages/ChangePassword/UserChangePassword/UserChangePassword";
 import  UpdatePostForm from "./components/Forms/Expert/UpdatePostForm/UpdatePostForm"
 import UpdateRoutineForm from "./components/Forms/Expert/UpdateRoutineForm/UpdateRoutineForm";
+import DoctorAppointments from "./pages/Expert/DoctorAppointments/DoctorAppointments";
+import ConsultationDetails from "./pages/Expert/ConsultationDetails/ConsultationDetails";
+import RoutinesConsultationDetails from "./pages/Expert/RoutinesConsultationDetails/RoutinesConsultationDetails";
+import MeetingManagement from "./pages/MeetingManagement/MeetingManagement";
 const App = () => {
   const { isLoggedIn } = useAuth();
 
@@ -145,6 +149,7 @@ const App = () => {
             <Route path="/appointment/:id" element={<Appointment />} />
             <Route path="/routines-appointments" element={<RoutinesAppointment />} />
           </Route>
+           <Route path="/live-streaming" element={<LiveStreaming />} />
            <Route path="/livestreaming/:id" element={<LiveStreaming />} />
           <Route element={<ExpertProtectedRoute />}>
             <Route
@@ -161,6 +166,12 @@ const App = () => {
             <Route path="/posts/create" element={<CreatePost />} />
             {/* change password */}
             <Route path="/expert/change-password" element={<ExpertChangePassword />} />
+            {/* Doctor Appointment Routes */}
+            <Route path="/appointments" element={<DoctorAppointments />} />
+            <Route path="/appointments/consultation/:id" element={<ConsultationDetails />} />
+            <Route path="/appointments/routines/:id" element={<RoutinesConsultationDetails />} />
+            {/* Meeting Management Route */}
+            <Route path="/meetings" element={<MeetingManagement />} />
           </Route>
 
           <Route element={<ProtectedRoute />}>

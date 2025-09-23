@@ -27,6 +27,9 @@ const appointmentSchema = new mongoose.Schema(
       enum: ["Pending", "Accepted", "Rejected"],
       default: "Pending",
     },
+    description:{
+      type:String,
+    },
     meetId: {
       type: String,
       required: true,

@@ -6,21 +6,8 @@
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ArogyaPath</title>
-  <!-- Cookiebot script - only load in production -->
-  <script>
-    // Only load Cookiebot in production environment
-    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      const script = document.createElement('script');
-      script.id = 'Cookiebot';
-      script.src = 'https://consent.cookiebot.com/uc.js';
-      script.setAttribute('data-cbid', '%VITE_COOKIEBOT_ID%');
-      script.setAttribute('data-blockingmode', 'auto');
-      script.setAttribute('data-culture', 'en');
-      script.type = 'text/javascript';
-      script.defer = true;
-      document.head.appendChild(script);
-    }
-  </script>
+  <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="%VITE_COOKIEBOT_ID%"
+    data-blockingmode="auto" data-culture="en" type="text/javascript" defer></script>
 
 </head>
 

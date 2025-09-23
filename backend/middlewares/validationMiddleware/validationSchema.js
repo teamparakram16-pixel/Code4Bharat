@@ -22,6 +22,7 @@ export const expertSignupSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().email("Invalid email format"),
   password: z.string().min(8, "Password is required"),
+  role: z.enum(["User", "Expert"]),
 });
 
 // -------------------- User Schema --------------------
