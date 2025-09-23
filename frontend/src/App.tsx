@@ -11,7 +11,7 @@ import CreatePost from "./pages/Expert/CreatePost/CreatePost";
 import HomePage from "./pages/HomePage";
 import CreateSuccessStory from "./pages/User/CreateSuccessStory/CreateSuccessStory";
 import { PageNotFound } from "./pages/PageNotFound/PageNotFound";
-// import Premium from "./pages/Premium/Premium";
+import Premium from "./pages/Premium/Premium";
 import MobileVerify from "./pages/auth/MobileVerify/MobileVerify";
 import ExpertCompleteProfile from "./pages/Expert/ExpertCompleteProfile/ExpertCompleteProfile";
 import UserCompleteProfile from "./pages/User/UserCompleteProfile/UserCompleteProfile";
@@ -29,10 +29,10 @@ import { AllRoutinePosts } from "./pages/posts/RoutinesPosts";
 import { AllSuccessStoriesPosts } from "./pages/posts/SuccessStoryPosts";
 import { VerifiedByVaidya } from "./pages/Expert/VerifiedSuccessStory/VerifiedSuccessStories";
 
-// import { ForgotPasswordPage } from "./pages/ForgotPasswordPage/ForgotPasswordPage";
-// import { ResetPasswordPage } from "./pages/ResetPasswordPage/ResetPasswordPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage/ResetPasswordPage";
 import CopySnackbar from "./components/CopySnackBar/CopySnackBar";
-// import DoctorProfile from "./pages/DoctorProfile/DoctorProfile";
+import DoctorProfile from "./pages/DoctorProfile/DoctorProfile";
 
 import PageFooter from "./components/PageFooter";
 import PageNavBar from "./components/PageNavBar";
@@ -48,18 +48,20 @@ import UserProfilePage from "./pages/User/UserProfilePage/UserProfilePage";
 import AboutUs from "./pages/AboutUs/AboutUs";
 import ContactUs from "./pages/ContactUs/ContactUs";
 import TermsNConditions from "./pages/TermsNConditions/TermsNConditions";
+import Appointment from "./pages/Appointments/Appointment";
+import RoutinesAppointment from "./pages/Appointments/RoutinesAppointment";
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
 
 import LearnMore from "./pages/Learn More/learnMore";
-
-// import SearchDoctor from "./pages/DoctorSearchPage/DoctorSearch";
-// import UserSuccessStoriesPage from "./pages/UserPosts/userposts";
-// import { UserPostsPage } from "./pages/LikedPages/likePages";
+import LiveStreaming from "./pages/LiveStreaming/LiveStreaming";
+import SearchDoctor from "./pages/DoctorSearchPage/DoctorSearch";
+import UserSuccessStoriesPage from "./pages/UserPosts/userposts";
+import { UserPostsPage } from "./pages/LikedPages/likePages";
 import PrivacyPolicy from "./pages/PrivacyPolicy/privacyPolicy";
 import CookiePolicy from "./pages/Cookies/cookiePolicy";
 import UpdateSuccessStory from "./components/Forms/User/UpdateSuccessStory/UpdateSuccessStory"
-// import ExpertChangePassword from "./pages/ChangePassword/ExpertChangePassword/ExpertChangePassword";
-// import UserChangePassword from "./pages/ChangePassword/UserChangePassword/UserChangePassword";
+import ExpertChangePassword from "./pages/ChangePassword/ExpertChangePassword/ExpertChangePassword";
+import UserChangePassword from "./pages/ChangePassword/UserChangePassword/UserChangePassword";
 import  UpdatePostForm from "./components/Forms/Expert/UpdatePostForm/UpdatePostForm"
 import UpdateRoutineForm from "./components/Forms/Expert/UpdateRoutineForm/UpdateRoutineForm";
 const App = () => {
@@ -107,14 +109,14 @@ const App = () => {
             <Route path="/user/login" element={<LoginUser />} />
             <Route path="/user/register" element={<RegisterUser />} />
             <Route path="/auth" element={<RoleSelection />} />
-            {/* <Route
+            <Route
               path="/:role/forgot-password"
               element={<ForgotPasswordPage />}
-            /> */}
-            {/* <Route
+            />
+            <Route
               path="/:role/reset-password/:token"
               element={<ResetPasswordPage />}
-            /> */}
+            />
             <Route path="/email/verify" element={<EmailVerificationPage />} />
             <Route
               path="/email/verify/:userId/:token"
@@ -133,14 +135,17 @@ const App = () => {
               element={<CreateSuccessStory />}
             />
             <Route path="/user/profile" element={<UserProfilePage />} />
-            {/* <Route path="/search/doctor" element={<SearchDoctor />} />
+            <Route path="/search/doctor" element={<SearchDoctor />} />
             <Route path="/doctor-profile/:id" element={<DoctorProfile />} />
             <Route path="/myposts" element={<UserSuccessStoriesPage />} />
-            <Route path="/likedposts" element={<UserPostsPage />} /> */}
+            <Route path="/likedposts" element={<UserPostsPage />} />
             {/* change password */}
-            {/* <Route path="/user/change-password" element={<UserChangePassword />} /> */}
+            <Route path="/user/change-password" element={<UserChangePassword />} />
+            {/* Appointment Routes */}
+            <Route path="/appointment/:id" element={<Appointment />} />
+            <Route path="/routines-appointments" element={<RoutinesAppointment />} />
           </Route>
-
+           <Route path="/livestreaming/:id" element={<LiveStreaming />} />
           <Route element={<ExpertProtectedRoute />}>
             <Route
               path="/complete-profile/expert"
@@ -155,7 +160,7 @@ const App = () => {
             <Route path="/expert/profile" element={<ExpertProfilePage />} />
             <Route path="/posts/create" element={<CreatePost />} />
             {/* change password */}
-            {/* <Route path="/expert/change-password" element={<ExpertChangePassword />} /> */}
+            <Route path="/expert/change-password" element={<ExpertChangePassword />} />
           </Route>
 
           <Route element={<ProtectedRoute />}>
@@ -175,7 +180,7 @@ const App = () => {
               path="/u/chat-requests/received"
               element={<ReceivedChatRequestPage />}
             />
-            {/* <Route path="/premium" element={<Premium />} /> */}
+            <Route path="/premium" element={<Premium />} />
             <Route path="/u/chat-requests/sent" element={<SentChatRequest />} />
             <Route path="/u/chats" element={<YourChats />} />
             <Route path="/verify-mobile" element={<MobileVerify />} />
