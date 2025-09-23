@@ -12,9 +12,9 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import { 
+import {
   CalendarMonth as ConsultationIcon,
-  FitnessCenter as RoutineIcon 
+  FitnessCenter as RoutineIcon
 } from "@mui/icons-material";
 
 import ProfileHeader from "@/components/DoctorProfile/ProfileHeader/ProfileHeader";
@@ -23,6 +23,7 @@ import ContentTabs from "@/components/DoctorProfile/ContentTabs/ContentTabs";
 import { useDoctor } from "@/hooks/useDoctor/useDoctor";
 import usePost from "@/hooks/usePost/usePost";
 import { toast } from "react-toastify";
+import { filter } from "lodash";
 
 
 interface Post {
@@ -36,41 +37,46 @@ const DoctorProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { doctor, loading, error } = useDoctor(id);
-  const { getPostById } = usePost();
+  const { getExpertPosts , getexpertChatId } = usePost();
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
   const [postsError, setPostsError] = useState("");
+  const [activeFilter] = useState<string>("general");
 
   const [activeTab, setActiveTab] = useState(0);
-  
+
   // State for appointment menu
   const [appointmentMenuAnchor, setAppointmentMenuAnchor] = useState<null | HTMLElement>(null);
   const isAppointmentMenuOpen = Boolean(appointmentMenuAnchor);
-
   useEffect(() => {
-    if (doctor?.posts?.length) {
-      const fetchPosts = async () => {
-        setPostsLoading(true);
-        setPostsError("");
-        try {
-          const data = await getPostById(doctor.posts as any);
-          if (data && data.posts) {
-            setPosts(data.posts);
-          } else {
-            setPostsError("Failed to fetch posts");
-          }
-        } catch (error: any) {
-          setPostsError(error.message || "Unexpected error");
-        } finally {
-          setPostsLoading(false);
+    if (!id) return;
+
+    const fetchPosts = async () => {
+      setPostsLoading(true);
+      setPostsError("");
+      try {
+        const data = await getExpertPosts(id, activeFilter)
+
+
+        if (data && Array.isArray(data)) {
+          setPosts(data);
+        } else {
+          setPosts([]);
+          setPostsError("No posts found");
         }
-      };
-      fetchPosts();
-    } else {
-      setPosts([]);
-    }
-  }, [doctor]);
+      } catch (error: any) {
+        setPostsError(error.message || "Unexpected error");
+      } finally {
+        setPostsLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, [id, filter]);
+
+
+
 
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -94,6 +100,19 @@ const DoctorProfile: React.FC = () => {
   const handleRoutineAppointmentClick = () => {
     handleAppointmentMenuClose();
     navigate(`/doctor-profile/${id}/appointments/routines`);
+  };
+
+  const handleMessageWithExpert = async () => {
+    if(!doctor?._id) return ;
+    
+    try {
+      const chatId = await getexpertChatId(doctor._id)
+
+      navigate(`/chats/${chatId}`);
+
+    } catch (error) {
+      console.error("Error starting chat:", error);
+    }
   };
 
 
@@ -148,7 +167,7 @@ const DoctorProfile: React.FC = () => {
         }}
         isFollowing={false}
         onFollow={() => toast.success("Follow clicked")}
-        onMessage={() => toast.success("Message clicked")}
+        onMessage={() => handleMessageWithExpert()}
         onBookAppointment={handleBookAppointmentClick}
       />
 
@@ -269,7 +288,7 @@ const DoctorProfile: React.FC = () => {
               },
             ],
             email: doctor.email,
-            phone: doctor.profile?.contactNo?.toString() || "" ,
+            phone: doctor.profile?.contactNo?.toString() || "",
             hospital: doctor.profile?.address?.clinicAddress || "",
             location: `${doctor.profile?.address?.city || ""}, ${doctor.profile?.address?.state || ""}`,
 

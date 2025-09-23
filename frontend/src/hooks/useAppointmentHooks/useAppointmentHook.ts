@@ -27,18 +27,17 @@ export const useAppointmentsHooks = () => {
         `${import.meta.env.VITE_SERVER_URL}/api/appointment`,
         payload
       );
-      toast.success("Appointment booked successfully!");
-      return response.data.appointment;
+      return response.appointment;
     } catch (err: any) {
       setError(
         err.response?.data?.message ||
-          err.message ||
-          "Failed to book appointment"
+        err.message ||
+        "Failed to book appointment"
       );
       toast.error(
         err.response?.data?.message ||
-          err.message ||
-          "Error booking appointment"
+        err.message ||
+        "Error booking appointment"
       );
       throw err;
     } finally {
@@ -56,20 +55,20 @@ export const useAppointmentsHooks = () => {
       setError(null);
 
       const data = await api.get(
-        `${import.meta.env.VITE_SERVER_URL}/api/appointment/consulations/user`
+        `${import.meta.env.VITE_SERVER_URL}/api/appointment/consultations/user`
       );
 
       return data;
     } catch (err: any) {
       setError(
         err.response?.data?.message ||
-          err.message ||
-          "Failed to fetch appointments"
+        err.message ||
+        "Failed to fetch appointments"
       );
       toast.error(
         err.response?.data?.message ||
-          err.message ||
-          "Error fetching appointments"
+        err.message ||
+        "Error fetching appointments"
       );
       throw err;
     } finally {
@@ -87,21 +86,40 @@ export const useAppointmentsHooks = () => {
       setError(null);
 
       const data = await api.get(
-        `${
-          import.meta.env.VITE_SERVER_URL
+        `${import.meta.env.VITE_SERVER_URL
         }/api/appointment/consultations/expert`
       );
       return data;
     } catch (err: any) {
       setError(
         err.response?.data?.message ||
-          err.message ||
-          "Failed to fetch appointments"
+        err.message ||
+        "Failed to fetch appointments"
       );
       toast.error(
         err.response?.data?.message ||
-          err.message ||
-          "Error fetching appointments"
+        err.message ||
+        "Error fetching appointments"
+      );
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+  // 📌 Get Appointment by Meet ID
+  const getAppointmentByMeetId = async (meetId: string): Promise<{ appointment: any; linkExpired: boolean }> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await api.get(`${import.meta.env.VITE_SERVER_URL}/api/appointment/consultation/${meetId}`);
+      return response.data;
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message || err.message || "Failed to fetch appointment by Meet ID"
+      );
+      toast.error(
+        err.response?.data?.message || err.message || "Error fetching appointment by Meet ID"
       );
       throw err;
     } finally {
@@ -209,5 +227,6 @@ export const useAppointmentsHooks = () => {
     getRoutineAppointmentById,
     getConsultationAppointmentById,
     shareRoutineAppointment,
+    getAppointmentByMeetId
   };
 };

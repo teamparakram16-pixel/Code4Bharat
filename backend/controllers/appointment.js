@@ -82,9 +82,11 @@ export const createAppointment = wrapAsync(async (req, res) => {
 // Get all appointments of logged-in user
 export const getUserAppointments = wrapAsync(async (req, res) => {
   const userId = req.user._id;
+  console.log(userId)
   const appointments = await Appointment.find({ user: userId })
-    .populate("expert", "name email")
-    .populate("prakriti");
+  .populate("expert", "name email")
+  .populate("prakriti")
+  .sort({ updatedAt: -1 });
 
   const routineAppointments = await RoutineAppointment.find({ userId });
   res.status(200).json({ appointments, routineAppointments });

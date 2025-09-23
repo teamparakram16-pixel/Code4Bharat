@@ -60,6 +60,7 @@ const Appointment: React.FC = () => {
     setError(null);
 
     try {
+<<<<<<< HEAD
       // API call to book appointment - would include:
       // - doctorId: id
       // - date: selectedDate.format('YYYY-MM-DD')
@@ -76,6 +77,20 @@ const Appointment: React.FC = () => {
       console.error('Error booking appointment:', error);
       setError('Failed to book appointment. Please try again.');
       toast.error('Failed to book appointment');
+=======
+      await createAppointment({
+        expertId: expertId!, // send the param to backend
+        appointmentDate: selectedDate.format("YYYY-MM-DD"),
+        appointmentTime: selectedTime.format("HH:mm"),
+        description: notes.trim(),
+      });
+      toast.success("Appointment booked successfully!");
+      navigate("/user/appointments");
+    } catch (error: any) {
+      console.error(error);
+      setError(error.message || "Failed to book appointment");
+      toast.error(error.message || "Failed to book appointment");
+>>>>>>> e2add52d46ae4a592e53654cf8af25137dac38c9
     } finally {
       setLoading(false);
     }
