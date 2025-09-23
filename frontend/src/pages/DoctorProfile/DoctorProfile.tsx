@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   CircularProgress,
@@ -7,7 +7,15 @@ import {
   Button,
   Card,
   CardContent,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
+import { 
+  CalendarMonth as ConsultationIcon,
+  FitnessCenter as RoutineIcon 
+} from "@mui/icons-material";
 
 import ProfileHeader from "@/components/DoctorProfile/ProfileHeader/ProfileHeader";
 import AboutSection from "@/components/DoctorProfile/AboutSection/AboutSection";
@@ -26,6 +34,7 @@ interface Post {
 
 const DoctorProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { doctor, loading, error } = useDoctor(id);
   const { getPostById } = usePost();
 
@@ -34,6 +43,10 @@ const DoctorProfile: React.FC = () => {
   const [postsError, setPostsError] = useState("");
 
   const [activeTab, setActiveTab] = useState(0);
+  
+  // State for appointment menu
+  const [appointmentMenuAnchor, setAppointmentMenuAnchor] = useState<null | HTMLElement>(null);
+  const isAppointmentMenuOpen = Boolean(appointmentMenuAnchor);
 
   useEffect(() => {
     if (doctor?.posts?.length) {
@@ -62,6 +75,25 @@ const DoctorProfile: React.FC = () => {
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
+  };
+
+  // Handlers for appointment menu
+  const handleBookAppointmentClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAppointmentMenuAnchor(event.currentTarget);
+  };
+
+  const handleAppointmentMenuClose = () => {
+    setAppointmentMenuAnchor(null);
+  };
+
+  const handleConsultationClick = () => {
+    handleAppointmentMenuClose();
+    navigate(`/doctor-profile/${id}/appointments/consultation`);
+  };
+
+  const handleRoutineAppointmentClick = () => {
+    handleAppointmentMenuClose();
+    navigate(`/doctor-profile/${id}/appointments/routines`);
   };
 
 
@@ -117,8 +149,41 @@ const DoctorProfile: React.FC = () => {
         isFollowing={false}
         onFollow={() => toast.success("Follow clicked")}
         onMessage={() => toast.success("Message clicked")}
-        onBookAppointment={() => toast.success("Book Appointment clicked")}
+        onBookAppointment={handleBookAppointmentClick}
       />
+
+      {/* Appointment Menu */}
+      <Menu
+        anchorEl={appointmentMenuAnchor}
+        open={isAppointmentMenuOpen}
+        onClose={handleAppointmentMenuClose}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            mt: 1,
+            minWidth: 200,
+          },
+        }}
+      >
+        <MenuItem onClick={handleConsultationClick}>
+          <ListItemIcon>
+            <ConsultationIcon color="primary" />
+          </ListItemIcon>
+          <ListItemText
+            primary="Consultation"
+            secondary="General medical consultation"
+          />
+        </MenuItem>
+        <MenuItem onClick={handleRoutineAppointmentClick}>
+          <ListItemIcon>
+            <RoutineIcon color="primary" />
+          </ListItemIcon>
+          <ListItemText
+            primary="Routine Appointment"
+            secondary="Routine check-up & follow-up"
+          />
+        </MenuItem>
+      </Menu>
 
       <ContentTabs
         activeTab={activeTab}

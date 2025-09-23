@@ -146,8 +146,8 @@ const App = () => {
             {/* change password */}
             <Route path="/user/change-password" element={<UserChangePassword />} />
             {/* Appointment Routes */}
-            <Route path="/appointment/:id" element={<Appointment />} />
-            <Route path="/routines-appointments" element={<RoutinesAppointment />} />
+            <Route path="/doctor-profile/:id/appointments/consultation" element={<Appointment />} />
+            <Route path="/doctor-profile/:id/appointments/routines" element={<RoutinesAppointment />} />
           </Route>
            <Route path="/live-streaming" element={<LiveStreaming />} />
            <Route path="/livestreaming/:id" element={<LiveStreaming />} />
