@@ -1,6 +1,7 @@
 import ExpressError from "../../utils/expressError.js";
 import { parseZodError } from "../../utils/parseZodError.js";
 import validationSchemas, {
+  medicalRoutineAppointmentSchema,
   razorpayPaymentSchema,
 } from "./validationSchema.js";
 const {
@@ -163,6 +164,17 @@ export const validatePaymentBody = (req, res, next) => {
   next();
 };
 
+export const validateMedicalRoutineAppointment = (req, res, next) => {
+  const result = medicalRoutineAppointmentSchema.safeParse(
+    req.body.appointmentData
+  );
+  if (!result.success) {
+    throw new ExpressError(400, parseZodError(result.error));
+  }
+  req.validatedData = result.data;
+  next();
+};
+
 export default {
   validateUser,
   validateExpert,
@@ -178,4 +190,5 @@ export default {
   checkChatRequestDoesNotContainCurrentUser,
   validateContactUs,
   validatePaymentBody,
+  validateMedicalRoutineAppointment,
 };

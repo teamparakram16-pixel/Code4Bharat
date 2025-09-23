@@ -310,6 +310,28 @@ export const razorpayPaymentSchema = z.object({
   // Optionally, add more fields if you expect them
 });
 
+// -------------------- Medical Routine Appointment Schema --------------------
+export const medicalRoutineAppointmentSchema = z.object({
+  profession: z.string(),
+  dailyRoutineDescription: z.string(),
+  primaryHealthIssues: z.string(),
+  medicalHistory: z
+    .object({
+      chronicIllnesses: z.array(z.string()).optional(),
+      pastSurgeries: z.array(z.string()).optional(),
+      allergies: z.array(z.string()).optional(),
+    })
+    .optional(),
+  currentMedications: z.array(z.string()).optional(),
+  dietaryHabits: z.string(),
+  dietaryPreferences: z.array(z.string()).optional(),
+  foodAllergies: z.array(z.string()).optional(),
+  hydrationHabits: z.string().optional(),
+  healthGoals: z.string(),
+  mentalHealth: z.string(),
+  substanceUse: z.string().optional(),
+});
+
 // -------------------- Default Export --------------------
 export default {
   userSchemaZod,
@@ -329,4 +351,5 @@ export default {
   expertSignupSchema,
   loginSchema,
   razorpayPaymentSchema,
+  medicalRoutineAppointmentSchema,
 };

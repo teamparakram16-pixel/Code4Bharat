@@ -3,6 +3,8 @@ import Appointment from "../models/Appointment.js";
 import Prakriti from "../models/Prakriti.js";
 import { customAlphabet } from "nanoid";
 import wrapAsync from "../utils/wrapAsync.js";
+import RoutineAppointment from "../models/RoutineAppointment.js";
+import ExpressError from "../utils/expressError.js";
 
 const nanoid = customAlphabet(
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
@@ -18,7 +20,9 @@ export const createAppointment = wrapAsync(async (req, res) => {
 
   // Validate appointmentDate
   if (!appointmentDate || isNaN(new Date(appointmentDate))) {
-    return res.status(400).json({ message: "Invalid or missing appointmentDate." });
+    return res
+      .status(400)
+      .json({ message: "Invalid or missing appointmentDate." });
   }
 
   const appointmentDateObj = new Date(appointmentDate);
@@ -34,7 +38,9 @@ export const createAppointment = wrapAsync(async (req, res) => {
   const link = `http://localhost:5173/livestreaming/${meetId}`;
 
   // Set link expiry to appointmentDate + 24 hours
-  const linkExpiresAt = new Date(appointmentDateObj.getTime() + 24 * 60 * 60 * 1000);
+  const linkExpiresAt = new Date(
+    appointmentDateObj.getTime() + 24 * 60 * 60 * 1000
+  );
 
   // Create the appointment
   const appointment = await Appointment.create({
@@ -128,3 +134,80 @@ export const updateAppointmentStatus = wrapAsync(async (req, res) => {
     appointment,
   });
 });
+
+//handleRoutineAppointment
+
+export const createRoutineAppointment = async (req, res) => {
+  // The validation middleware should have already validated req.body and attached req.validatedData
+  const { doctorId, appointmentData } = req.body;
+  const userId = req.user._id;
+
+  if (!doctorId) {
+    throw new ExpressError(400, "Doctor ID is required.");
+  }
+
+  const doctor = await Expert.findById(doctorId);
+  if (!doctor) {
+    throw new ExpressError(404, "Doctor not found.");
+  }
+
+  // Fetch user's PrakrithiAnalysis (assuming user.prakrithiAnalysis holds the ObjectId)
+  let prakrithiAnalysisId = req.user.prakrithiAnalysis.analysisRef;
+  if (!prakrithiAnalysisId) {
+    throw new ExpressError(400, "User does not have a Prakrithi Analysis.");
+  }
+
+  // Create the RoutineAppointment
+  const routineAppointment = await RoutineAppointment.create({
+    userId,
+    doctorId,
+    appointmentData,
+    prakrithiAnalysis: prakrithiAnalysisId,
+    routineResponse: {
+      pdfUrl: "",
+      createdAt: null,
+    },
+    paymentId: null,
+    status: "pending",
+  });
+
+  res.status(201).json({
+    message: "Routine appointment created successfully.",
+    routineAppointment,
+  });
+};
+
+// Controller to handle routine response PDF upload
+export const routineResponseController = async (req, res) => {
+  const appointmentId = req.params.id;
+  const pdfUrl = req.routineResponsePdfUrl;
+
+  if (!pdfUrl) {
+    throw new ExpressError(400, "No routine response PDF uploaded.");
+  }
+
+  const appointment = await RoutineAppointment.findById(appointmentId);
+  if (!appointment) {
+    throw new ExpressError(404, "Routine appointment not found.");
+  }
+
+  // Only the assigned doctor can upload the response
+  if (appointment.doctorId.toString() !== req.user._id.toString()) {
+    throw new ExpressError(
+      403,
+      "Not authorized to upload response for this appointment."
+    );
+  }
+
+  appointment.routineResponse = {
+    pdfUrl,
+    createdAt: new Date(),
+  };
+  appointment.status = "uploaded";
+  await appointment.save();
+
+  res.status(200).json({
+    message: "Routine response uploaded successfully.",
+    routineResponse: appointment.routineResponse,
+  });
+};
