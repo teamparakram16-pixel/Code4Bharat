@@ -313,24 +313,55 @@ export const razorpayPaymentSchema = z.object({
 
 // -------------------- Medical Routine Appointment Schema --------------------
 export const medicalRoutineAppointmentSchema = z.object({
+  // Professional Information
   profession: z.string(),
-  dailyRoutineDescription: z.string(),
-  primaryHealthIssues: z.string(),
-  medicalHistory: z
-    .object({
-      chronicIllnesses: z.array(z.string()).optional(),
-      pastSurgeries: z.array(z.string()).optional(),
-      allergies: z.array(z.string()).optional(),
-    })
-    .optional(),
-  currentMedications: z.array(z.string()).optional(),
-  dietaryHabits: z.string(),
-  dietaryPreferences: z.array(z.string()).optional(),
-  foodAllergies: z.array(z.string()).optional(),
-  hydrationHabits: z.string().optional(),
-  healthGoals: z.string(),
-  mentalHealth: z.string(),
-  substanceUse: z.string().optional(),
+  workHours: z.string(),
+  workEnvironment: z.string(),
+  physicalActivity: z.string(),
+
+  // Daily Routine
+  wakeUpTime: z.string(),
+  sleepTime: z.string(),
+  mealTimes: z.object({
+    breakfast: z.string(),
+    lunch: z.string(),
+    dinner: z.string(),
+  }),
+  exerciseTime: z.string(),
+  exerciseType: z.string(),
+
+  // Health Issues
+  currentHealthIssues: z.array(z.string()),
+  healthConcerns: z.string(),
+  energyLevels: z.string(),
+  stressLevels: z.string(),
+
+  // Medical History
+  medicalHistory: z.string(),
+  surgeries: z.string(),
+  allergies: z.string(),
+  familyHistory: z.string(),
+
+  // Current Medications
+  medications: z.string(),
+  supplements: z.string(),
+
+  // Diet and Nutrition
+  dietType: z.string(),
+  foodPreferences: z.string(),
+  foodAvoidances: z.string(),
+  waterIntake: z.string(),
+
+  // Goals and Expectations
+  healthGoals: z.array(z.string()),
+  specificConcerns: z.string(),
+  expectations: z.string(),
+
+  // Mental Health and Lifestyle
+  mentalHealthConcerns: z.string(),
+  lifeChanges: z.string(),
+  socialSupport: z.string(),
+  hobbies: z.string(),
 });
 
 // -------------------- Default Export --------------------

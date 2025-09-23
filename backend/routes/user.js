@@ -54,6 +54,12 @@ const router = express.Router();
 //   })
 // );
 
+router.get(
+  "/prakrithi-analysis",
+  checkUserLogin,
+  wrapAsync(completeUserProfileController.viewPrakrithiAnalysis)
+);
+
 router.post(
   "/bookmarks/:postId",
   checkUserLogin,
@@ -67,16 +73,31 @@ router.delete(
 );
 
 // This is for adding to like posts list of user
-router.post('/liked-posts/:postId',checkUserLogin,wrapAsync(completeUserProfileController.likePosts))
+router.post(
+  "/liked-posts/:postId",
+  checkUserLogin,
+  wrapAsync(completeUserProfileController.likePosts)
+);
 
 // This is for removing posts from like list of user
-router.delete('/liked-posts/:postId',checkUserLogin,wrapAsync(completeUserProfileController.disLikePosts))
+router.delete(
+  "/liked-posts/:postId",
+  checkUserLogin,
+  wrapAsync(completeUserProfileController.disLikePosts)
+);
 
+router.patch(
+  "/change-password",
+  checkUserLogin,
+  wrapAsync(completeUserProfileController.changePassword)
+);
 
-router.patch("/change-password",checkUserLogin,wrapAsync(completeUserProfileController.changePassword))
-  
 // This is for getting all like post list of user
-router.get("/liked-posts",checkUserLogin,wrapAsync(completeUserProfileController.getAllLikedPosts))
+router.get(
+  "/liked-posts",
+  checkUserLogin,
+  wrapAsync(completeUserProfileController.getAllLikedPosts)
+);
 
 router.get(
   "/bookmarks",
@@ -165,10 +186,18 @@ router.get(
 );
 
 // PATCH : Update User Details
-router.patch('/update-profile',checkUserLogin,wrapAsync(completeUserProfileController.updateProfile))
+router.patch(
+  "/update-profile",
+  checkUserLogin,
+  wrapAsync(completeUserProfileController.updateProfile)
+);
 
 // Post : Send user information about the chat request from another user
-router.post("/chat-request",checkUserLogin,wrapAsync(completeUserProfileController.sendchatacceptinfo))
+router.post(
+  "/chat-request",
+  checkUserLogin,
+  wrapAsync(completeUserProfileController.sendchatacceptinfo)
+);
 
 // GET : To get user details for profile
 router.get(

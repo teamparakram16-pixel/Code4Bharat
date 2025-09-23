@@ -5,6 +5,7 @@ if (process.env.NODE_ENV !== "production") {
 
 // import path from "path";
 import express from "express";
+import http from "http";
 import cors from "cors";
 import mongoose from "mongoose";
 import session from "express-session";
@@ -48,7 +49,7 @@ import medicineRoutes from "./routes/medicine.js";
 import connectToSocket from "./controllers/socketController.js";
 import appointmentRoutes from "./routes/appointment.js";
 const app = express();
-
+const server = http.createServer(app);
 main()
   .then(() => {
     console.log("DB connected successfully");
@@ -216,12 +217,12 @@ app.use("/api/contact", contactUsRoute);
 app.use(errorHandler);
 
 const port = process.env.PORT || 3000;
-
-const server = app.listen(port, () => {
+const io = connectToSocket(server);
+ server.listen(port, () => {
   console.log("Server listening on port: ", port);
 });
 
-const io = connectToSocket(server);
+
 
 // const io = new Server(server, {
 //   pingTimeout: 60000,

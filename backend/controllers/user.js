@@ -24,6 +24,7 @@ export const searchUsers = async (req, res) => {
 };
 
 import { z } from "zod";
+import ExpressError from "../utils/expressError.js";
 
 export const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 export const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png"];
@@ -47,9 +48,12 @@ export const completeProfile = async (req, res) => {
     const { userProfile } = req.body;
     let profileData;
     try {
-      profileData = typeof userProfile === "string" ? JSON.parse(userProfile) : userProfile;
+      profileData =
+        typeof userProfile === "string" ? JSON.parse(userProfile) : userProfile;
     } catch (err) {
-      return res.status(400).json({ success: false, message: "Invalid userProfile JSON" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid userProfile JSON" });
     }
 
     // Validate profile data
@@ -83,9 +87,15 @@ export const completeProfile = async (req, res) => {
       "verifications.completeProfile": true,
     };
 
-    const user = await User.findByIdAndUpdate(userId, { $set: updates }, { new: true });
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: updates },
+      { new: true }
+    );
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     res.status(200).json({
@@ -102,12 +112,18 @@ const getUserProfile = async (req, res) => {
   try {
     const UserId = req.user?._id;
     if (!UserId) {
-      return res.status(401).json({ success: false, message: "User not authenticated" });
+      return res
+        .status(401)
+        .json({ success: false, message: "User not authenticated" });
     }
 
-    const user = await User.findById(UserId).select("-resetPasswordToken -resetPasswordExpires -__v");
+    const user = await User.findById(UserId).select(
+      "-resetPasswordToken -resetPasswordExpires -__v"
+    );
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     res.status(200).json({
@@ -124,19 +140,18 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-
 // Get User Bookmarked Posts
 // GET /bookmarks
 
 const getBookmarks = async (req, res) => {
-  const user = await User.findById(req.user._id).populate('bookmarks')
+  const user = await User.findById(req.user._id).populate("bookmarks");
   if (!user) {
     return res.status(400).json({
-      message: "User not Found !"
+      message: "User not Found !",
     });
   }
-  res.status(200).json({ bookmarks: user.bookmarks })
-}
+  res.status(200).json({ bookmarks: user.bookmarks });
+};
 
 // Posting Bookmarks
 // POST /bookmarks/:postId
@@ -146,13 +161,11 @@ const postBookmarks = async (req, res) => {
   const user_Id = req.user._id;
 
   const user = await User.findById(user_Id);
-  if (!user)
-    return res.status(404).json({ message: "User not found" });
+  if (!user) return res.status(404).json({ message: "User not found" });
 
   const post = await Post.findById(postId);
 
-  if (!post)
-    return res.status(404).json({ message: "Post not found" });
+  if (!post) return res.status(404).json({ message: "Post not found" });
 
   if (user.bookmarks.includes(postId)) {
     return res.status(400).json({ message: "Post already bookmarked" });
@@ -165,20 +178,17 @@ const postBookmarks = async (req, res) => {
     message: "Post bookmarked successfully",
     bookmarks: user.bookmarks,
   });
-
-}
+};
 
 const removeBookmarks = async (req, res) => {
   const { postId } = req.params;
   const userId = req.user._id;
 
   const user = await User.findById(userId);
-  if (!user)
-    return res.status(404).json({ message: "User not Found !" })
+  if (!user) return res.status(404).json({ message: "User not Found !" });
 
   const post = await Post.findById(postId);
-  if (!post)
-    return res.status(404).json({ message: "Post not Found !" })
+  if (!post) return res.status(404).json({ message: "Post not Found !" });
 
   user.bookmarks = user.bookmarks.filter(
     (bookmarkId) => bookmarkId.toString() !== postId
@@ -189,7 +199,7 @@ const removeBookmarks = async (req, res) => {
     message: "Post bookmark removed successfully",
     bookmarks: user.bookmarks,
   });
-}
+};
 
 const changePassword = async (req, res) => {
   try {
@@ -197,19 +207,25 @@ const changePassword = async (req, res) => {
     const userId = req.user._id;
 
     const user = await User.findById(userId);
-    if (!user)
-      return res.status(400).json({ message: "User not Found !" });
+    if (!user) return res.status(400).json({ message: "User not Found !" });
 
     if (!oldPassword || !newPassword) {
-      return res.status(400).json({ message: "Old and new passwords are required." });
+      return res
+        .status(400)
+        .json({ message: "Old and new passwords are required." });
     }
 
     if (oldPassword === newPassword)
-      return res.status(400).json({ message: "New password cannot be same as old password!" });
+      return res
+        .status(400)
+        .json({ message: "New password cannot be same as old password!" });
 
     user.changePassword(oldPassword, newPassword, async (err) => {
       if (err) {
-        return res.status(400).json({ message: "Old password is incorrect or password update failed.", error: err.message });
+        return res.status(400).json({
+          message: "Old password is incorrect or password update failed.",
+          error: err.message,
+        });
       }
       await user.save();
       res.status(200).json({ message: "Password changed successfully!" });
@@ -222,15 +238,30 @@ const changePassword = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { newfullName, newphoneNumber, newhealthGoal, newGender, newAge, newBio } = req.body;
+    const {
+      newfullName,
+      newphoneNumber,
+      newhealthGoal,
+      newGender,
+      newAge,
+      newBio,
+    } = req.body;
     const userId = req.user._id;
 
     const user = await User.findById(userId);
-    if (!user)
-      return res.status(400).json({ message: "User not Found !" });
+    if (!user) return res.status(400).json({ message: "User not Found !" });
 
-    if (!newfullName || !newphoneNumber || !newhealthGoal || !newGender || !newAge || !newBio)
-      return res.status(400).json({ message: "Kindly fill all the details correctly" });
+    if (
+      !newfullName ||
+      !newphoneNumber ||
+      !newhealthGoal ||
+      !newGender ||
+      !newAge ||
+      !newBio
+    )
+      return res
+        .status(400)
+        .json({ message: "Kindly fill all the details correctly" });
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
@@ -262,70 +293,65 @@ const getAllLikedPosts = async (req, res) => {
   const userId = req.user._id;
 
   const user = await User.findById(userId).populate({
-    path: 'likedPosts',
+    path: "likedPosts",
     populate: {
-      path: 'owner',
-      select: '_id profile.fullName profile.profileImage'
-    }
+      path: "owner",
+      select: "_id profile.fullName profile.profileImage",
+    },
   });
 
-  if (!user)
-    return res.status(400).json({ message: "User not Found !" });
+  if (!user) return res.status(400).json({ message: "User not Found !" });
 
   return res.status(200).json({
-    "Message": "All Liked Posts fetched",
+    Message: "All Liked Posts fetched",
     likedPosts: user.likedPosts,
-  })
-
-}
+  });
+};
 
 const likePosts = async (req, res) => {
   try {
     const { postId } = req.params;
     const userId = req.user._id;
 
-    const user = await User.findById(userId)
-    if (!user)
-      return res.status(400).json({ message: "User not Found !" });
+    const user = await User.findById(userId);
+    if (!user) return res.status(400).json({ message: "User not Found !" });
 
     const post = await Post.findById(postId);
-    if (!post)
-      return res.status(400).json({ message: "Post not Found !" });
+    if (!post) return res.status(400).json({ message: "Post not Found !" });
 
     if (user.likedPosts.includes(postId))
-      return res.status(400).json({ message: "Post already Liked ! You can only like a post only once ." });
+      return res.status(400).json({
+        message: "Post already Liked ! You can only like a post only once .",
+      });
 
+    user.likedPosts.push(postId);
+    post.likesCount += 1;
 
-    user.likedPosts.push(postId)
-    post.likesCount += 1
-
-    await user.save()
-    await post.save()
+    await user.save();
+    await post.save();
 
     res.status(200).json({ message: "Post liked successfully!" });
-
   } catch (error) {
     console.log("Error liking Post : ", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
-
-}
+};
 
 const disLikePosts = async (req, res) => {
   try {
     const { postId } = req.params;
     const userId = req.user._id;
 
-    const user = await User.findById(userId)
-    if (!user)
-      return res.status(400).json({ message: "User not Found !" });
+    const user = await User.findById(userId);
+    if (!user) return res.status(400).json({ message: "User not Found !" });
 
     const post = await Post.findById(postId);
-    if (!post)
-      return res.status(400).json({ message: "Post not Found !" });
+    if (!post) return res.status(400).json({ message: "Post not Found !" });
 
     if (!user.likedPosts.includes(postId)) {
-      return res.status(400).json({ message: "You have not liked this post yet!" });
+      return res
+        .status(400)
+        .json({ message: "You have not liked this post yet!" });
     }
 
     user.likedPosts = user.likedPosts.filter(
@@ -334,17 +360,15 @@ const disLikePosts = async (req, res) => {
 
     post.likesCount = Math.max(0, post.likesCount - 1); // Here it prevents negative value for likes
 
-    await user.save()
-    await post.save()
+    await user.save();
+    await post.save();
 
     res.status(200).json({ message: "Post like removed successfully!" });
-
   } catch (error) {
     console.log("Error removing like from the  Post : ", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
-
-}
+};
 
 const sendchatacceptinfo = async (req, res) => {
   try {
@@ -352,23 +376,38 @@ const sendchatacceptinfo = async (req, res) => {
     const senderEmail = req.user.email;
     const { percentagematch, recieverEmail } = req.body;
     if (!percentagematch || !recieverEmail)
-      return res.status(400).json({ message: "Fill all the details correctly !" })
+      return res
+        .status(400)
+        .json({ message: "Fill all the details correctly !" });
 
-    const response = await sendChatInfoEmail(senderName, senderEmail, percentagematch, recieverEmail);
+    const response = await sendChatInfoEmail(
+      senderName,
+      senderEmail,
+      percentagematch,
+      recieverEmail
+    );
     if (!response)
-      return res.status(400).json({ message: "Error in sending email !" })
+      return res.status(400).json({ message: "Error in sending email !" });
 
     return res.status(200).json({
       response: response,
       message: "Email sent successfully to the reciever.",
-    })
-
+    });
   } catch (error) {
-    console.log("Error sending email to the reciever !")
+    console.log("Error sending email to the reciever !");
   }
+};
 
-}
+const viewPrakrithiAnalysis = async (req, res) => {
+  // Assuming you have a Prakriti model and user stores a reference to it
+  const prakrithiAnalysis = req.user.prakritiAnalysis;
+  if (!prakrithiAnalysis) {
+    return next(new ExpressError(404, "Prakrithi Analysis not found"));
+  }
+  res.status(200).json({ success: true, prakrithiAnalysis });
+};
 
+// Export or add to your controller object
 export default {
   searchUsers,
   completeProfile,
@@ -381,7 +420,6 @@ export default {
   getAllLikedPosts,
   likePosts,
   disLikePosts,
-  sendchatacceptinfo
+  sendchatacceptinfo,
+  viewPrakrithiAnalysis,
 };
-
-
