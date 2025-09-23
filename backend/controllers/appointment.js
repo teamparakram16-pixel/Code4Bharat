@@ -13,32 +13,44 @@ const nanoid = customAlphabet(
 
 // Create a new appointment
 export const createAppointment = wrapAsync(async (req, res) => {
-  const { expertId, appointmentDate, description } = req.body;
+  const { expertId, appointmentDate, appointmentTime, description } = req.body;
   const userId = req.user._id;
 
-  if (!appointmentDate || isNaN(new Date(appointmentDate))) {
-    return res
-      .status(400)
-      .json({ message: "Invalid or missing appointmentDate." });
+  // Validate date & time
+  if (!appointmentDate || !appointmentTime) {
+    return res.status(400).json({ message: "Appointment date and time are required." });
   }
-  const appointmentDateObj = new Date(appointmentDate);
 
+  const datePart = new Date(appointmentDate); // YYYY-MM-DD
+  const timePart = appointmentTime.split(":"); // HH:mm
+
+  if (isNaN(datePart.getTime()) || timePart.length !== 2) {
+    return res.status(400).json({ message: "Invalid date or time format." });
+  }
+
+  // Merge date + time
+  datePart.setHours(parseInt(timePart[0]), parseInt(timePart[1]), 0, 0);
+
+  if (datePart < new Date()) {
+    return res.status(400).json({ message: "Appointment must be in the future." });
+  }
+
+  // Check Prakriti exists
   const prakriti = await Prakriti.findOne({ user: userId });
-  if (!prakriti)
+  if (!prakriti) {
     return res.status(404).json({ message: "Prakriti analysis not found." });
+  }
 
   const meetId = nanoid();
   const link = `http://localhost:5173/livestreaming/${meetId}`;
-  const linkExpiresAt = new Date(
-    appointmentDateObj.getTime() + 24 * 60 * 60 * 1000
-  );
+  const linkExpiresAt = new Date(datePart.getTime() + 24 * 60 * 60 * 1000);
 
   const appointment = await Appointment.create({
     user: userId,
     expert: expertId,
     prakriti: prakriti._id,
     description,
-    appointmentDate: appointmentDateObj,
+    appointmentDate: datePart,
     meetId,
     link,
     linkExpiresAt,
@@ -56,10 +68,13 @@ export const createAppointment = wrapAsync(async (req, res) => {
   //   console.error("Failed to send appointment confirmation email:", err);
   // }
 
-  res
-    .status(201)
-    .json({ message: "Appointment booked successfully.", appointment });
+  res.status(201).json({
+    success: true,
+    message: "Appointment booked successfully.",
+    appointment,
+  });
 });
+
 
 // Get all appointments of logged-in user
 export const getUserAppointments = wrapAsync(async (req, res) => {
