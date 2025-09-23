@@ -20,8 +20,16 @@ const createAppointment = async (payload: AppointmentPayload) => {
     setError(null);
 
     const response = await api.post(`${import.meta.env.VITE_SERVER_URL}/api/appointment`, payload);
-    toast.success("Appointment booked successfully!");
-    return response.data.appointment; 
+    console.log("Create appointment response:", response.data);
+
+    // backend returns { success, message, appointment }
+    const appointment = response.data?.appointment;
+    if (!appointment) {
+      throw new Error("Invalid server response: appointment not found");
+    }
+
+    toast.success(response.data.message || "Appointment booked successfully!");
+    return appointment;
   } catch (err: any) {
     setError(err.response?.data?.message || err.message || "Failed to book appointment");
     toast.error(err.response?.data?.message || err.message || "Error booking appointment");
@@ -30,6 +38,7 @@ const createAppointment = async (payload: AppointmentPayload) => {
     setLoading(false);
   }
 };
+
 
 
   // 📌 Get User’s Appointments
