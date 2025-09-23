@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext"; // ✅ use your global auth context
 import useApi from "@/hooks/useApi/useApi";
 import { handleAxiosError } from "@/utils/handleAxiosError";
 import { toast } from "react-toastify";
@@ -6,7 +7,9 @@ import { ExpertFormData } from "@/pages/Expert/ExpertCompleteProfile/ExpertCompl
 
 const useExpertAuth = () => {
   const { post, patch, get } = useApi();
+  const { setIsLoggedIn, setRole, setUser } = useAuth(); // ✅ include these
 
+  // 🚀 Expert Login
   const expertLogin = async (email: string, password: string) => {
     try {
       const response = await post(
@@ -14,18 +17,27 @@ const useExpertAuth = () => {
         {
           email,
           password,
-          role: "Expert",
+          role: "expert",
         }
       );
-      if (response.success) {
+
+      if (response.success && response.expert) {
+        // ✅ Save expert in context + localStorage
+        setUser(response.expert);
+        setIsLoggedIn(true);
+        setRole("expert");
+        localStorage.setItem("user", JSON.stringify(response.expert));
+
         toast.success("Logged in successfully");
       }
+
       return response;
     } catch (error) {
       handleAxiosError(error);
     }
   };
 
+  // 📝 Expert Signup
   const expertSignUp = async (data: ExpertRegisterFormData) => {
     try {
       const response = await post(
@@ -41,6 +53,7 @@ const useExpertAuth = () => {
     }
   };
 
+  // 📋 Complete Expert Profile
   const expertCompleteProfile = async (formData: ExpertFormData) => {
     try {
       const uploadData = new FormData();
@@ -102,7 +115,11 @@ const useExpertAuth = () => {
         }
       );
 
-      if (response.success) {
+      if (response.success && response.expert) {
+        // ✅ Update expert in context + localStorage
+        setUser(response.expert);
+        localStorage.setItem("user", JSON.stringify(response.expert));
+
         toast.success("Profile completed successfully");
       }
 
@@ -112,18 +129,26 @@ const useExpertAuth = () => {
     }
   };
 
-  // ✅ NEW FUNCTION: Load Expert Profile
+  // 👤 Load Expert Profile
   const loadExpertProfile = async () => {
     try {
       const response = await get(
         `${import.meta.env.VITE_SERVER_URL}/api/experts/profile`
       );
-      if (response.success) {
-        return response.expert; // return only expert object
+      if (response.success && response.expert) {
+        // ✅ Save expert in context + localStorage
+        setUser(response.expert);
+        setIsLoggedIn(true);
+        setRole("expert");
+        localStorage.setItem("user", JSON.stringify(response.expert));
+
+        return response.expert;
       }
+      return null;
     } catch (error) {
       toast.error("Failed to load profile.");
       handleAxiosError(error);
+      return null;
     }
   };
 
@@ -131,7 +156,7 @@ const useExpertAuth = () => {
     expertLogin,
     expertSignUp,
     expertCompleteProfile,
-    loadExpertProfile, // ⬅️ export it here
+    loadExpertProfile,
   };
 };
 
