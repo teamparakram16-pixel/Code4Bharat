@@ -1,6 +1,7 @@
 import express from "express";
 import {
   validatePost,
+  validateComment,
 } from "../middlewares/validationMiddleware/validationMiddlewares.js";
 import wrapAsync from "../utils/wrapAsync.js";
 import postController from "../controllers/post.js";
@@ -11,6 +12,11 @@ import { verifyPostData } from "../middlewares/verifyPostMiddleware.js";
 import { handlePostImageDiskUpload } from "../middlewares/cloudinary/handlePostImage/handlePostImageDiskUpload.js";
 import { validatePostMediaExclusivity } from "../middlewares/cloudinary/handlePostImage/validatePostMediaExclusivity.js";
 import { handlePostCloudinaryUpload } from "../middlewares/cloudinary/handlePostImage/handlePostImageUpload.js";
+import {
+  createCommentForModel,
+  getCommentsForModel,
+} from "../controllers/commentController.js";
+import Post from "../models/Post/Post.js";
 
 const router = express.Router();
 
@@ -31,29 +37,29 @@ router.post(
 router.get("/filter", isLoggedIn, wrapAsync(postController.filterPosts));
 
 // Nested comment routes for posts
-// router.get(
-//   "/:postId/comments",
-//   isLoggedIn,
-//   wrapAsync(getCommentsForModel("Post"))
-// );
-// router.post(
-//   "/:postId/comments",
-//   isLoggedIn,
-//   validateComment,
-//   wrapAsync(createCommentForModel(Post, "Post"))
-// );
+router.get(
+  "/:postId/comments",
+  isLoggedIn,
+  wrapAsync(getCommentsForModel("Post"))
+);
+router.post(
+  "/:postId/comments",
+  isLoggedIn,
+  validateComment,
+  wrapAsync(createCommentForModel(Post, "Post"))
+);
 
 router.get("/:postId", isLoggedIn, wrapAsync(postController.getPostById));
 
 router.delete(
   "/:postId",
-  checkExpertLogin,
+  // checkExpertLogin,
   wrapAsync(postController.deletePost)
 );
 
 router.put(
   "/:postId",
-  checkExpertLogin,
+  // checkExpertLogin,
   validatePost,
   wrapAsync(postController.updatePost)
 );

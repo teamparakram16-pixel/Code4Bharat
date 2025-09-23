@@ -1,9 +1,9 @@
 import express from "express";
 import successStoryControllers from "../controllers/successStory.js";
-// import {
-//   createCommentForModel,
-//   getCommentsForModel,
-// } from "../controllers/commentController.js";
+import {
+  createCommentForModel,
+  getCommentsForModel,
+} from "../controllers/commentController.js";
 import SuccessStory from "../models/SuccessStory/SuccessStory.js";
 import { validateComment } from "../middlewares/validationMiddleware/validationMiddlewares.js";
 import wrapAsync from "../utils/wrapAsync.js";
@@ -77,17 +77,17 @@ router.put(
 );
 
 // Nested comment routes for success stories
-// router.get(
-//   "/:postId/comments",
-//   isLoggedIn,
-//   wrapAsync(getCommentsForModel("SuccessStory"))
-// );
-// router.post(
-//   "/:postId/comments",
-//   isLoggedIn,
-//   validateComment,
-//   wrapAsync(createCommentForModel(SuccessStory, "SuccessStory"))
-// );
+router.get(
+  "/:postId/comments",
+  isLoggedIn,
+  wrapAsync(getCommentsForModel("SuccessStory"))
+);
+router.post(
+  "/:postId/comments",
+  isLoggedIn,
+  validateComment,
+  wrapAsync(createCommentForModel(SuccessStory, "SuccessStory"))
+);
 
 // router.post(
 //   "/:id/reject",

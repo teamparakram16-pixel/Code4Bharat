@@ -2,6 +2,7 @@ import User from "../models/User/User.js";
 import Post from "../models/Post/Post.js";
 import SuccessStory from "../models/SuccessStory/SuccessStory.js";
 import Routine from "../models/Routines/Routines.js";
+import { sendChatInfoEmail } from "../utils/sendChatAcceptInfoEmail.js";
 
 export const searchUsers = async (req, res) => {
   const { q: searchQuery } = req.query;
@@ -228,7 +229,7 @@ const updateProfile = async (req, res) => {
     if (!user)
       return res.status(400).json({ message: "User not Found !" });
 
-     if (!newfullName || !newphoneNumber || !newhealthGoal || !newGender || !newAge || !newBio)
+    if (!newfullName || !newphoneNumber || !newhealthGoal || !newGender || !newAge || !newBio)
       return res.status(400).json({ message: "Kindly fill all the details correctly" });
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -291,7 +292,7 @@ const likePosts = async (req, res) => {
     if (!post)
       return res.status(400).json({ message: "Post not Found !" });
 
-    if(user.likedPosts.includes(postId))
+    if (user.likedPosts.includes(postId))
       return res.status(400).json({ message: "Post already Liked ! You can only like a post only once ." });
 
 
@@ -331,7 +332,7 @@ const disLikePosts = async (req, res) => {
       (dislikeId) => dislikeId.toString() !== postId.toString()
     );
 
-    post.likesCount  = Math.max(0,post.likesCount-1); // Here it prevents negative value for likes
+    post.likesCount = Math.max(0, post.likesCount - 1); // Here it prevents negative value for likes
 
     await user.save()
     await post.save()
@@ -341,6 +342,29 @@ const disLikePosts = async (req, res) => {
   } catch (error) {
     console.log("Error removing like from the  Post : ", error.message);
     res.status(500).json({ message: "Internal server error" });
+  }
+
+}
+
+const sendchatacceptinfo = async (req, res) => {
+  try {
+    const senderName = req.user.username;
+    const senderEmail = req.user.email;
+    const { percentagematch, recieverEmail } = req.body;
+    if (!percentagematch || !recieverEmail)
+      return res.status(400).json({ message: "Fill all the details correctly !" })
+
+    const response = await sendChatInfoEmail(senderName, senderEmail, percentagematch, recieverEmail);
+    if (!response)
+      return res.status(400).json({ message: "Error in sending email !" })
+
+    return res.status(200).json({
+      response: response,
+      message: "Email sent successfully to the reciever.",
+    })
+
+  } catch (error) {
+    console.log("Error sending email to the reciever !")
   }
 
 }
@@ -356,7 +380,8 @@ export default {
   updateProfile,
   getAllLikedPosts,
   likePosts,
-  disLikePosts
+  disLikePosts,
+  sendchatacceptinfo
 };
 
 

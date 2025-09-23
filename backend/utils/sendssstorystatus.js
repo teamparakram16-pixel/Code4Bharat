@@ -3,7 +3,7 @@ import ExpressError from "./expressError.js";
 
 export const successStoryEmail = async (postId, doctorName, reason, receiverEmail) => {
   try {
-    const postLink = `${process.env.VITE_API_URL}/success-stories/${postId}`;
+    const postLink = `https://arogyapaths.netlify.app/success-stories/${postId}`;
 
     const isRejected = Boolean(reason && reason.trim());
     const subject = isRejected
@@ -29,6 +29,7 @@ export const successStoryEmail = async (postId, doctorName, reason, receiverEmai
     `;
 
     await sendEmail(receiverEmail, subject, emailBody);
+    return true;
   } catch (error) {
     throw new ExpressError(500, "Error sending email to the user. Try Again!");
   }

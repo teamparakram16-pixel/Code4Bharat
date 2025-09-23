@@ -43,6 +43,9 @@ router.patch(
 // Patch Update Expert Profile
 router.patch("/update-profile",checkExpertLogin,isAlreadyVerified,wrapAsync(expertProfileController.updateProfile))
 
+// Post : To send user the message regarding the success story update
+router.post("/successstories-status",checkExpertLogin,wrapAsync(expertProfileController.sendsstorystatus))
+
 // Ptch Update Expert Password
 router.patch("/change-password",checkExpertLogin,isAlreadyVerified,wrapAsync(expertProfileController.changePassword))
 

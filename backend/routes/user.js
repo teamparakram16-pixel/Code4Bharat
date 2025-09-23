@@ -167,6 +167,9 @@ router.get(
 // PATCH : Update User Details
 router.patch('/update-profile',checkUserLogin,wrapAsync(completeUserProfileController.updateProfile))
 
+// Post : Send user information about the chat request from another user
+router.post("/chat-request",checkUserLogin,wrapAsync(completeUserProfileController.sendchatacceptinfo))
+
 // GET : To get user details for profile
 router.get(
   "/user-profile",
