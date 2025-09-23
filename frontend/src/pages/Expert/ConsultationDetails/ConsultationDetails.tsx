@@ -11,11 +11,6 @@ import {
   Divider,
   Paper,
   Stack,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   Alert,
   IconButton,
 
@@ -101,40 +96,71 @@ const ConsultationDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [consultation, setConsultation] = useState<Consultation | null>(null);
-  const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [doctorNotes, setDoctorNotes] = useState('');
-  const [prescription, setPrescription] = useState('');
-  const [diagnosis, setDiagnosis] = useState('');
 
   useEffect(() => {
     // Simulate API call to fetch consultation details
     setConsultation(mockConsultation);
   }, [id]);
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
     if (consultation) {
-      setConsultation({
-        ...consultation,
-        status: 'accepted',
-        doctorNotes,
-        updatedAt: new Date().toISOString(),
-      });
-      setAcceptDialogOpen(false);
-      // Here you would make an API call to update the consultation
+      try {
+        // Make API call to update the consultation
+        const response = await fetch(`/appointment/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: 'accepted'
+          }),
+          credentials: 'include' // Important: to send cookies
+        });
+        
+        if (response.ok) {
+          setConsultation({
+            ...consultation,
+            status: 'accepted',
+            updatedAt: new Date().toISOString(),
+          });
+        } else {
+          // Handle error
+          console.error('Failed to accept consultation');
+        }
+      } catch (error) {
+        console.error('Error accepting consultation:', error);
+      }
     }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (consultation) {
-      setConsultation({
-        ...consultation,
-        status: 'rejected',
-        doctorNotes,
-        updatedAt: new Date().toISOString(),
-      });
-      setRejectDialogOpen(false);
-      // Here you would make an API call to update the consultation
+      try {
+        // Make API call to update the consultation
+        const response = await fetch(`/appointment/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: 'rejected'
+          }),
+          credentials: 'include' // Important: to send cookies
+        });
+        
+        if (response.ok) {
+          setConsultation({
+            ...consultation,
+            status: 'rejected',
+            updatedAt: new Date().toISOString(),
+          });
+        } else {
+          // Handle error
+          console.error('Failed to reject consultation');
+        }
+      } catch (error) {
+        console.error('Error rejecting consultation:', error);
+      }
     }
   };
 
@@ -454,7 +480,7 @@ const ConsultationDetails: React.FC = () => {
                           variant="contained"
                           color="success"
                           startIcon={<Check />}
-                          onClick={() => setAcceptDialogOpen(true)}
+                          onClick={handleAccept}
                           size="large"
                         >
                           Accept Consultation
@@ -463,7 +489,7 @@ const ConsultationDetails: React.FC = () => {
                           variant="outlined"
                           color="error"
                           startIcon={<Close />}
-                          onClick={() => setRejectDialogOpen(true)}
+                          onClick={handleReject}
                           size="large"
                         >
                           Reject Consultation
@@ -495,101 +521,6 @@ const ConsultationDetails: React.FC = () => {
           </Box>
         </Box>
 
-        {/* Accept Dialog */}
-        <Dialog open={acceptDialogOpen} onClose={() => setAcceptDialogOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Check color="success" />
-            Accept Consultation
-          </DialogTitle>
-          <DialogContent>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              You are about to accept this consultation appointment. You can add diagnosis, prescription, and notes.
-            </Typography>
-            
-            <Stack spacing={3}>
-              <TextField
-                label="Diagnosis"
-                multiline
-                rows={2}
-                fullWidth
-                value={diagnosis}
-                onChange={(e) => setDiagnosis(e.target.value)}
-                placeholder="Enter your diagnosis..."
-              />
-              
-              <TextField
-                label="Prescription"
-                multiline
-                rows={3}
-                fullWidth
-                value={prescription}
-                onChange={(e) => setPrescription(e.target.value)}
-                placeholder="Enter prescription details..."
-              />
-              
-              <TextField
-                label="Doctor's Notes"
-                multiline
-                rows={2}
-                fullWidth
-                value={doctorNotes}
-                onChange={(e) => setDoctorNotes(e.target.value)}
-                placeholder="Add any additional notes..."
-              />
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setAcceptDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleAccept} 
-              variant="contained" 
-              color="success"
-              startIcon={<Check />}
-            >
-              Accept Consultation
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Reject Dialog */}
-        <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Close color="error" />
-            Reject Consultation
-          </DialogTitle>
-          <DialogContent>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Please provide a reason for rejecting this consultation. This will help the patient understand your decision.
-            </Typography>
-            
-            <TextField
-              label="Reason for Rejection"
-              multiline
-              rows={4}
-              fullWidth
-              value={doctorNotes}
-              onChange={(e) => setDoctorNotes(e.target.value)}
-              placeholder="Please explain why you cannot accept this consultation..."
-              required
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setRejectDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleReject} 
-              variant="contained" 
-              color="error"
-              startIcon={<Close />}
-              disabled={!doctorNotes.trim()}
-            >
-              Reject Consultation
-            </Button>
-          </DialogActions>
-        </Dialog>
       </motion.div>
     </Container>
   );
