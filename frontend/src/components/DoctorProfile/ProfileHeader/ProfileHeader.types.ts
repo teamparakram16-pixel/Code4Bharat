@@ -17,5 +17,5 @@ export interface ProfileHeaderProps {
   isFollowing: boolean;
   onFollow: () => void;
   onMessage: () => void;
-  onBookAppointment: () => void;
+  onBookAppointment: (event: React.MouseEvent<HTMLElement>) => void;
 }
