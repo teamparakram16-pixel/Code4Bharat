@@ -14,6 +14,7 @@ import { parseFormdata } from "../middlewares/cloudinaryMiddleware.js";
 import { handleExpertDocumentDiskUpload } from "../middlewares/cloudinary/handleExpertDocument/handleExpertDocumentsDiskUpload.js";
 import { handleExpertDocumentUpload } from "../middlewares/cloudinary/handleExpertDocument/handleExpertDocumentUpload.js";
 import {validateObjectId} from "../middlewares/objectId.js";
+import { checkUserLogin } from "../middlewares/users/auth.js";
 
 
 
@@ -65,10 +66,17 @@ router.get("/doctors",isLoggedIn,isAlreadyVerified,wrapAsync(expertProfileContro
 
 router.get("/profile", checkExpertLogin, wrapAsync(expertProfileController.getExpertProfile));
 
-router.get("/posts",checkExpertLogin, wrapAsync(expertProfileController.getExpertPosts));
+router.get("/:id/posts",wrapAsync(expertProfileController.getExpertPosts));
+
+router.get("/myposts",checkExpertLogin, wrapAsync(expertProfileController.getExpertPosts));
+
 
 // PUT: Edit expert basic info
 router.put("/edit/:id",validateObjectId, wrapAsync(expertProfileController.editExpert));
+
+// POST : Establish Connection between user and expert
+router.post("/:expertId/chats",checkUserLogin,wrapAsync(expertProfileController.establishusertoexpertchat));
+
 
 // Post : Add Expert Post Bookmarks
 router.post('/bookmarks/:postId',checkExpertLogin,wrapAsync(expertProfileController.addBookmarks))
