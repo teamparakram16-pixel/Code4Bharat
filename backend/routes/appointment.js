@@ -4,10 +4,9 @@ import {
   getExpertAppointments,
   getAppointmentByMeetId,
   createAppointment,
-  updateAppointmentStatus,
+  updateAppointmentStatusViaEmail,
   verifyMeetLink
 } from "../controllers/appointment.js";
-
 
 const router = express.Router();
 
@@ -15,18 +14,18 @@ const router = express.Router();
 router.post("/", createAppointment);
 
 // Get all appointments for logged-in user
-router.get("/consulations/user",  getUserAppointments);
+router.get("/consultations/user", getUserAppointments);
 
 // Get all appointments for logged-in doctor/expert
-router.get("/consultations/expert",  getExpertAppointments);
+router.get("/consultations/expert", getExpertAppointments);
 
 // Get single appointment by meetId (link check included)
-router.get("/consultation/:meetId",  getAppointmentByMeetId);
+router.get("/consultation/:meetId", getAppointmentByMeetId);
 
-// Update appointment status (accept/reject)
-router.patch("/consultation/:appointmentId/status",  updateAppointmentStatus);
+// Update appointment status via email buttons
+router.get("/consultation/:appointmentId/status", updateAppointmentStatusViaEmail);
+
 // Verify meeting link
 router.get("/verify/:meetId", verifyMeetLink);
-
 
 export default router;
