@@ -1,6 +1,7 @@
 import ExpressError from "../../utils/expressError.js";
 import { parseZodError } from "../../utils/parseZodError.js";
 import validationSchemas, {
+  medicalRoutineAppointmentSchema,
   razorpayPaymentSchema,
 } from "./validationSchema.js";
 const {

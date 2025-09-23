@@ -16,7 +16,9 @@ import { checkUserLogin } from "../middlewares/users/auth.js";
 import { checkRoutineAppointmentDoctorAuth } from "../middlewares/appointMentMiddlewares/appointMentMiddlewares.js";
 import { handleRoutineResponseCloudinaryUpload } from "../middlewares/cloudinary/handleRoutineResponse/handleRoutineResponseCloudinaryUpload.js";
 import { handleRoutineResponseDiskUpload } from "../middlewares/cloudinary/handleRoutineResponse/handleRoutineResponseDiskUpload.js";
+
 import { checkExpertLogin } from "../middlewares/experts/auth.js";
+
 const router = express.Router();
 
 // Create appointment
@@ -41,7 +43,27 @@ router.patch(
   wrapAsync(routineResponseController)
 );
 
+// Create routine appointment (with validation and Prakrithi analysis check)
+router.post(
+  "/routine",
+  checkUserLogin,
+  validateMedicalRoutineAppointment,
+  checkPrakrithiAnalysisExists,
+  wrapAsync(createRoutineAppointment)
+);
+
+// Doctor's response to routine appointment
+router.patch(
+  "/routine/:id/response",
+  checkUserLogin,
+  handleRoutineResponseDiskUpload,
+  checkRoutineAppointmentDoctorAuth, // <-- Place before file upload
+  wrapAsync(handleRoutineResponseCloudinaryUpload),
+  wrapAsync(routineResponseController)
+);
+
 // Get all appointments for logged-in user
+
 router.get("/consulations/user",checkUserLogin, getUserAppointments);
 
 // Get all appointments for logged-in doctor/expert
