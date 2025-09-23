@@ -52,4 +52,6 @@ router.get("/consultation/:meetId", getAppointmentByMeetId);
 // Update appointment status (accept/reject)
 router.patch("/consultation/:appointmentId/status", updateAppointmentStatus);
 
+router.get("/verify/:meetId", verifyMeetLink)
+
 export default router;
