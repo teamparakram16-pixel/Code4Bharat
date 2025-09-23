@@ -15,7 +15,7 @@ const appointmentSchema = new mongoose.Schema(
     },
     prakriti: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Prakriti",
+      ref: "Prakrithi",
       required: true,
     },
     appointmentDate: {

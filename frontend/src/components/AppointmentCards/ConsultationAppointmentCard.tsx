@@ -29,28 +29,32 @@ import {
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { ConsultationAppointment } from "@/types/UserAppointments.types";
+import { useNavigate } from "react-router-dom";
 
+// Accepts appointment data as returned from backend
 interface ConsultationAppointmentCardProps {
-  appointment: ConsultationAppointment;
+  appointment: any;
   onCancel: (appointmentId: string) => void;
-  onReschedule: (appointmentId: string, newDate: string, newTime: string) => void;
+  onReschedule: (
+    appointmentId: string,
+    newDate: string,
+    newTime: string
+  ) => void;
   onJoinMeeting?: (meetingLink: string) => void;
 }
 
-const ConsultationAppointmentCard: React.FC<ConsultationAppointmentCardProps> = ({
-  appointment,
-  onCancel,
-  onReschedule,
-  onJoinMeeting,
-}) => {
+const ConsultationAppointmentCard: React.FC<
+  ConsultationAppointmentCardProps
+> = ({ appointment, onCancel, onReschedule, onJoinMeeting }) => {
   const theme = useTheme();
+  const navigate = useNavigate(); // Add this line
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case "confirmed":
       case "scheduled":
+      case "pending":
         return "success";
       case "completed":
         return "primary";
@@ -64,11 +68,13 @@ const ConsultationAppointmentCard: React.FC<ConsultationAppointmentCardProps> = 
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case "confirmed":
         return "Confirmed";
       case "scheduled":
         return "Scheduled";
+      case "pending":
+        return "Pending";
       case "completed":
         return "Completed";
       case "cancelled":
@@ -89,31 +95,50 @@ const ConsultationAppointmentCard: React.FC<ConsultationAppointmentCardProps> = 
   };
 
   const handleCancel = () => {
-    onCancel(appointment.id);
+    onCancel(appointment._id);
     handleMenuClose();
   };
 
   const handleJoinMeeting = () => {
-    if (appointment.meetingLink && onJoinMeeting) {
-      onJoinMeeting(appointment.meetingLink);
+    if (appointment.link && onJoinMeeting) {
+      onJoinMeeting(appointment.link);
     }
     handleMenuClose();
   };
 
-  const isUpcoming = () => {
-    const appointmentDateTime = new Date(`${appointment.appointmentDate} ${appointment.appointmentTime}`);
-    return appointmentDateTime > new Date() && appointment.status !== 'cancelled';
+  const handleViewDetails = () => {
+    navigate(
+      `/appointments/consultation/${appointment._id}`,
+      { state: { appointmentId: appointment._id } }
+    );
   };
 
+  // Only appointmentDate is present, no appointmentTime
+  const isUpcoming = () => {
+    const appointmentDateTime = new Date(appointment.appointmentDate);
+    return (
+      appointmentDateTime > new Date() &&
+      appointment.status?.toLowerCase() !== "cancelled"
+    );
+  };
+
+  // Meeting can be joined if link exists and status is confirmed/pending
   const canJoinMeeting = () => {
-    if (!appointment.meetingLink) return false;
-    const appointmentDateTime = new Date(`${appointment.appointmentDate} ${appointment.appointmentTime}`);
+    if (!appointment.link) return false;
+    const appointmentDateTime = new Date(appointment.appointmentDate);
     const now = new Date();
     const timeDiff = appointmentDateTime.getTime() - now.getTime();
     const minutesDiff = timeDiff / (1000 * 60);
-    // Allow joining 15 minutes before appointment time
-    return minutesDiff <= 15 && minutesDiff >= -60; // Can join 15 min before and up to 60 min after
+    return (
+      minutesDiff <= 15 &&
+      minutesDiff >= -60 &&
+      appointment.status?.toLowerCase() === "pending"
+    );
   };
+
+  // Doctor info from appointment.expert
+  const doctorName = appointment.expert?.email || "Doctor";
+  const doctorId = appointment.expert?._id || "";
 
   return (
     <motion.div
@@ -134,31 +159,23 @@ const ConsultationAppointmentCard: React.FC<ConsultationAppointmentCardProps> = 
         }}
       >
         <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="flex-start"
+            mb={2}
+          >
             <Box display="flex" alignItems="center" gap={2}>
-              <Avatar
-                src={appointment.doctorInfo.profileImage}
-                alt={appointment.doctorInfo.fullName}
-                sx={{ width: 50, height: 50 }}
-              >
+              <Avatar>
                 <Person />
               </Avatar>
               <Box>
                 <Typography variant="h6" fontWeight="bold">
-                  Dr. {appointment.doctorInfo.fullName}
+                  {doctorName}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {appointment.doctorInfo.specialization}
+                  Doctor ID: {doctorId}
                 </Typography>
-                <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                  <Star sx={{ fontSize: 16, color: "gold" }} />
-                  <Typography variant="caption">
-                    {appointment.doctorInfo.rating}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    • {appointment.doctorInfo.experience} years exp.
-                  </Typography>
-                </Box>
               </Box>
             </Box>
             <Box display="flex" alignItems="center" gap={1}>
@@ -178,51 +195,108 @@ const ConsultationAppointmentCard: React.FC<ConsultationAppointmentCardProps> = 
 
           <Box display="flex" flex={1} gap={3} flexWrap="wrap">
             <Box display="flex" alignItems="center" gap={1}>
-              <CalendarToday sx={{ fontSize: 18, color: theme.palette.primary.main }} />
+              <CalendarToday
+                sx={{ fontSize: 18, color: theme.palette.primary.main }}
+              />
               <Typography variant="body2">
                 {format(new Date(appointment.appointmentDate), "MMM dd, yyyy")}
               </Typography>
             </Box>
             <Box display="flex" alignItems="center" gap={1}>
-              <AccessTime sx={{ fontSize: 18, color: theme.palette.primary.main }} />
-              <Typography variant="body2">{appointment.appointmentTime}</Typography>
-            </Box>
-            <Box display="flex" alignItems="center" gap={1}>
-              <LocalHospital sx={{ fontSize: 18, color: theme.palette.primary.main }} />
+              <LocalHospital
+                sx={{ fontSize: 18, color: theme.palette.primary.main }}
+              />
               <Typography variant="body2">Consultation</Typography>
             </Box>
           </Box>
 
-          {appointment.reason && (
-            <Box mt={2}>
-              <Typography variant="body2" fontWeight="medium" gutterBottom>
-                Reason for Visit:
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {appointment.reason}
-              </Typography>
-            </Box>
-          )}
+          <Box mt={2}>
+            <Typography variant="body2" fontWeight="medium" gutterBottom>
+              Description:
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {appointment.description || "-"}
+            </Typography>
+          </Box>
 
-          {appointment.symptoms && appointment.symptoms.length > 0 && (
-            <Box mt={2}>
-              <Typography variant="body2" fontWeight="medium" gutterBottom>
-                Symptoms:
-              </Typography>
-              <Box display="flex" gap={1} flexWrap="wrap">
-                {appointment.symptoms.map((symptom, index) => (
-                  <Chip key={index} label={symptom} size="small" variant="outlined" />
-                ))}
+          <Box mt={2}>
+            <Typography variant="body2" fontWeight="medium" gutterBottom>
+              Prakriti Analysis:
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {appointment.prakriti?.Dominant_Prakrithi || "-"}
+            </Typography>
+          </Box>
+
+          <Box mt={2}>
+            <Typography variant="body2" fontWeight="medium" gutterBottom>
+              Recommendations:
+            </Typography>
+            {appointment.prakriti?.Recommendations?.Dietary_Guidelines?.length >
+              0 && (
+              <Box>
+                <Typography variant="body2" fontWeight="medium">
+                  Dietary Guidelines:
+                </Typography>
+                <ul>
+                  {appointment.prakriti.Recommendations.Dietary_Guidelines.map(
+                    (item: string, idx: number) => (
+                      <li key={idx}>
+                        <Typography variant="body2" color="text.secondary">
+                          {item}
+                        </Typography>
+                      </li>
+                    )
+                  )}
+                </ul>
               </Box>
-            </Box>
-          )}
+            )}
+            {appointment.prakriti?.Recommendations?.Lifestyle_Suggestions
+              ?.length > 0 && (
+              <Box>
+                <Typography variant="body2" fontWeight="medium">
+                  Lifestyle Suggestions:
+                </Typography>
+                <ul>
+                  {appointment.prakriti.Recommendations.Lifestyle_Suggestions.map(
+                    (item: string, idx: number) => (
+                      <li key={idx}>
+                        <Typography variant="body2" color="text.secondary">
+                          {item}
+                        </Typography>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </Box>
+            )}
+            {appointment.prakriti?.Recommendations?.Ayurvedic_Herbs_Remedies
+              ?.length > 0 && (
+              <Box>
+                <Typography variant="body2" fontWeight="medium">
+                  Ayurvedic Herbs & Remedies:
+                </Typography>
+                <ul>
+                  {appointment.prakriti.Recommendations.Ayurvedic_Herbs_Remedies.map(
+                    (item: string, idx: number) => (
+                      <li key={idx}>
+                        <Typography variant="body2" color="text.secondary">
+                          {item}
+                        </Typography>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </Box>
+            )}
+          </Box>
         </CardContent>
 
         <CardActions sx={{ justifyContent: "space-between", px: 2, pb: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            Fee: ₹{appointment.consultationFee}
+            Meeting ID: {appointment.meetId}
           </Typography>
-          {canJoinMeeting() && appointment.status === 'confirmed' && (
+          {canJoinMeeting() && (
             <Button
               variant="contained"
               startIcon={<VideoCall />}
@@ -244,7 +318,15 @@ const ConsultationAppointmentCard: React.FC<ConsultationAppointmentCardProps> = 
           }}
         >
           {isUpcoming() && (
-            <MenuItem onClick={() => onReschedule(appointment.id, appointment.appointmentDate, appointment.appointmentTime)}>
+            <MenuItem
+              onClick={() =>
+                onReschedule(
+                  appointment._id,
+                  appointment.appointmentDate,
+                  "" // No time field
+                )
+              }
+            >
               <ListItemIcon>
                 <Schedule />
               </ListItemIcon>
@@ -259,7 +341,7 @@ const ConsultationAppointmentCard: React.FC<ConsultationAppointmentCardProps> = 
               <ListItemText>Cancel</ListItemText>
             </MenuItem>
           )}
-          {appointment.meetingLink && canJoinMeeting() && (
+          {appointment.link && canJoinMeeting() && (
             <MenuItem onClick={handleJoinMeeting}>
               <ListItemIcon>
                 <VideoCall />

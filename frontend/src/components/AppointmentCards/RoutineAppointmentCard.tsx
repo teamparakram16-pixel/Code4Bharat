@@ -15,24 +15,25 @@ import {
   useTheme,
 } from "@mui/material";
 import {
-  AccessTime,
   CalendarToday,
   MoreVert,
   Cancel,
   Schedule,
   Person,
-  Star,
   FitnessCenter,
-  Repeat,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { RoutineAppointment } from "@/types/UserAppointments.types";
+import { useNavigate } from "react-router-dom";
 
 interface RoutineAppointmentCardProps {
-  appointment: RoutineAppointment;
+  appointment: any;
   onCancel: (appointmentId: string) => void;
-  onReschedule: (appointmentId: string, newDate: string, newTime: string) => void;
+  onReschedule: (
+    appointmentId: string,
+    newDate: string,
+    newTime: string
+  ) => void;
 }
 
 const RoutineAppointmentCard: React.FC<RoutineAppointmentCardProps> = ({
@@ -41,12 +42,14 @@ const RoutineAppointmentCard: React.FC<RoutineAppointmentCardProps> = ({
   onReschedule,
 }) => {
   const theme = useTheme();
+  const navigate = useNavigate(); // Add this line
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case "confirmed":
       case "scheduled":
+      case "pending":
         return "success";
       case "completed":
         return "primary";
@@ -60,11 +63,13 @@ const RoutineAppointmentCard: React.FC<RoutineAppointmentCardProps> = ({
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case "confirmed":
         return "Confirmed";
       case "scheduled":
         return "Scheduled";
+      case "pending":
+        return "Pending";
       case "completed":
         return "Completed";
       case "cancelled":
@@ -73,19 +78,6 @@ const RoutineAppointmentCard: React.FC<RoutineAppointmentCardProps> = ({
         return "Rescheduled";
       default:
         return status;
-    }
-  };
-
-  const getFrequencyColor = (frequency: string) => {
-    switch (frequency) {
-      case "daily":
-        return "primary";
-      case "weekly":
-        return "secondary";
-      case "monthly":
-        return "info";
-      default:
-        return "default";
     }
   };
 
@@ -98,14 +90,29 @@ const RoutineAppointmentCard: React.FC<RoutineAppointmentCardProps> = ({
   };
 
   const handleCancel = () => {
-    onCancel(appointment.id);
+    onCancel(appointment._id);
     handleMenuClose();
   };
 
   const isUpcoming = () => {
-    const appointmentDateTime = new Date(`${appointment.appointmentDate} ${appointment.appointmentTime}`);
-    return appointmentDateTime > new Date() && appointment.status !== 'cancelled';
+    const appointmentDateTime = new Date(appointment.createdAt);
+    return (
+      appointmentDateTime > new Date() &&
+      appointment.status?.toLowerCase() !== "cancelled"
+    );
   };
+
+  const handleViewDetails = () => {
+    navigate(`/appointments/routines/${appointment._id}`, {
+      state: { appointmentId: appointment._id },
+    });
+  };
+
+  // Doctor info is just doctorId (string or object)
+  const doctorInfo =
+    typeof appointment.doctorId === "object"
+      ? appointment.doctorId.email || appointment.doctorId._id
+      : appointment.doctorId;
 
   return (
     <motion.div
@@ -126,31 +133,23 @@ const RoutineAppointmentCard: React.FC<RoutineAppointmentCardProps> = ({
         }}
       >
         <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="flex-start"
+            mb={2}
+          >
             <Box display="flex" alignItems="center" gap={2}>
-              <Avatar
-                src={appointment.doctorInfo.profileImage}
-                alt={appointment.doctorInfo.fullName}
-                sx={{ width: 50, height: 50 }}
-              >
+              <Avatar>
                 <Person />
               </Avatar>
               <Box>
                 <Typography variant="h6" fontWeight="bold">
-                  Dr. {appointment.doctorInfo.fullName}
+                  {doctorInfo ? `Dr. ${doctorInfo}` : "Doctor"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {appointment.doctorInfo.specialization}
+                  Routine Care
                 </Typography>
-                <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                  <Star sx={{ fontSize: 16, color: "gold" }} />
-                  <Typography variant="caption">
-                    {appointment.doctorInfo.rating}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    • {appointment.doctorInfo.experience} years exp.
-                  </Typography>
-                </Box>
               </Box>
             </Box>
             <Box display="flex" alignItems="center" gap={1}>
@@ -170,75 +169,94 @@ const RoutineAppointmentCard: React.FC<RoutineAppointmentCardProps> = ({
 
           <Box display="flex" flex={1} gap={3} flexWrap="wrap">
             <Box display="flex" alignItems="center" gap={1}>
-              <CalendarToday sx={{ fontSize: 18, color: theme.palette.primary.main }} />
+              <CalendarToday
+                sx={{ fontSize: 18, color: theme.palette.primary.main }}
+              />
               <Typography variant="body2">
-                {format(new Date(appointment.appointmentDate), "MMM dd, yyyy")}
+                {format(new Date(appointment.createdAt), "MMM dd, yyyy")}
               </Typography>
             </Box>
             <Box display="flex" alignItems="center" gap={1}>
-              <AccessTime sx={{ fontSize: 18, color: theme.palette.primary.main }} />
-              <Typography variant="body2">{appointment.appointmentTime}</Typography>
-            </Box>
-            <Box display="flex" alignItems="center" gap={1}>
-              <FitnessCenter sx={{ fontSize: 18, color: theme.palette.primary.main }} />
+              <FitnessCenter
+                sx={{ fontSize: 18, color: theme.palette.primary.main }}
+              />
               <Typography variant="body2">Routine Care</Typography>
             </Box>
           </Box>
 
           <Box mt={2}>
             <Typography variant="body2" fontWeight="medium" gutterBottom>
-              Routine Type:
+              Profession:
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              {appointment.routineType}
+              {appointment.appointmentData?.profession || "-"}
             </Typography>
           </Box>
 
-          <Box mt={2} display="flex" alignItems="center" gap={1}>
-            <Repeat sx={{ fontSize: 18, color: theme.palette.secondary.main }} />
-            <Typography variant="body2" fontWeight="medium">
-              Frequency:
+          <Box mt={2}>
+            <Typography variant="body2" fontWeight="medium" gutterBottom>
+              Health Concerns:
             </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {appointment.appointmentData?.healthConcerns || "-"}
+            </Typography>
+          </Box>
+
+          <Box mt={2}>
+            <Typography variant="body2" fontWeight="medium" gutterBottom>
+              Status:
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {getStatusText(appointment.status)}
+            </Typography>
+          </Box>
+
+          {appointment.routineResponse?.pdfUrl && (
+            <Box mt={2}>
+              <Typography variant="body2" fontWeight="medium" gutterBottom>
+                Routine PDF:
+              </Typography>
+              <Typography variant="body2" color="primary">
+                <a
+                  href={appointment.routineResponse.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Download PDF
+                </a>
+              </Typography>
+            </Box>
+          )}
+
+          <Box mt={2} display="flex" gap={1}>
             <Chip
-              label={appointment.frequency.charAt(0).toUpperCase() + appointment.frequency.slice(1)}
-              color={getFrequencyColor(appointment.frequency) as any}
+              label={getStatusText(appointment.status)}
+              color={getStatusColor(appointment.status) as any}
               size="small"
               variant="outlined"
             />
+            <IconButton size="small" onClick={handleMenuOpen}>
+              <MoreVert />
+            </IconButton>
+            <Box flex={1} />
+            <Box>
+              <button
+                style={{
+                  padding: "6px 16px",
+                  borderRadius: "4px",
+                  border: "1px solid",
+                  borderColor: theme.palette.primary.main,
+                  background: "white",
+                  color: theme.palette.primary.main,
+                  cursor: "pointer",
+                  fontWeight: 500,
+                }}
+                onClick={handleViewDetails}
+              >
+                View Details
+              </button>
+            </Box>
           </Box>
-
-          {appointment.description && (
-            <Box mt={2}>
-              <Typography variant="body2" fontWeight="medium" gutterBottom>
-                Description:
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {appointment.description}
-              </Typography>
-            </Box>
-          )}
-
-          {appointment.instructions && (
-            <Box mt={2}>
-              <Typography variant="body2" fontWeight="medium" gutterBottom>
-                Instructions:
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {appointment.instructions}
-              </Typography>
-            </Box>
-          )}
-
-          {appointment.nextFollowUp && (
-            <Box mt={2}>
-              <Typography variant="body2" fontWeight="medium" gutterBottom>
-                Next Follow-up:
-              </Typography>
-              <Typography variant="body2" color="primary.main">
-                {format(new Date(appointment.nextFollowUp), "MMM dd, yyyy")}
-              </Typography>
-            </Box>
-          )}
         </CardContent>
 
         <Menu
@@ -250,7 +268,15 @@ const RoutineAppointmentCard: React.FC<RoutineAppointmentCardProps> = ({
           }}
         >
           {isUpcoming() && (
-            <MenuItem onClick={() => onReschedule(appointment.id, appointment.appointmentDate, appointment.appointmentTime)}>
+            <MenuItem
+              onClick={() =>
+                onReschedule(
+                  appointment._id,
+                  appointment.createdAt,
+                  "" // No time field
+                )
+              }
+            >
               <ListItemIcon>
                 <Schedule />
               </ListItemIcon>
