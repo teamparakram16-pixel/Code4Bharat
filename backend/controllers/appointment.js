@@ -6,6 +6,8 @@ import RoutineAppointment from "../models/RoutineAppointment/RoutineAppointment.
 import ExpressError from "../utils/expressError.js";
 import Expert from "../models/Expert/Expert.js";
 
+
+
 const nanoid = customAlphabet(
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
   10
@@ -207,3 +209,19 @@ export const routineResponseController = async (req, res) => {
     routineResponse: appointment.routineResponse,
   });
 };
+
+export const getRoutineAppointmentById = async (req, res) => {
+  const { id } = req.params;
+  const appointment = await RoutineAppointment.findById(id)
+    .populate("userId", "username email profile")
+    .populate("doctorId", "username email profile")
+    .populate("prakrithiAnalysis");
+
+  if (!appointment) {
+    return res.status(404).json({ message: "Routine appointment not found." });
+  }
+
+  res.status(200).json({ appointment });
+};
+
+
