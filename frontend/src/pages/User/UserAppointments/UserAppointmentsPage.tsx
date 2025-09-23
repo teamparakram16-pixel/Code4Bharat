@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Container,
@@ -31,6 +31,8 @@ import ConsultationAppointmentCard from "@/components/AppointmentCards/Consultat
 import RoutineAppointmentCard from "@/components/AppointmentCards/RoutineAppointmentCard";
 import { AppointmentFilters } from "@/types/UserAppointments.types";
 import { toast } from "react-toastify";
+import { useAuth } from "@/context/AuthContext";
+import { useAppointmentsHooks } from "@/hooks/useAppointmentHooks/useAppointmentHook";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -64,7 +66,9 @@ function a11yProps(index: number) {
 const UserAppointmentsPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  
+
+  const { role } = useAuth(); // Get user info
+
   const {
     loading,
     consultations,
@@ -73,16 +77,38 @@ const UserAppointmentsPage: React.FC = () => {
     getPastAppointments,
     cancelAppointment,
     rescheduleAppointment,
-    fetchUserAppointments,
+
+    setConsultations,
+    setRoutineAppointments,
+    // fetchUserAppointments,
     applyFilters,
     totalAppointments,
   } = useUserAppointments();
+
+  const { getUserAppointments, getExpertAppointments } = useAppointmentsHooks();
 
   const [activeTab, setActiveTab] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<AppointmentFilters>({
     status: "all",
   });
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      if (role === "user") {
+        const { appointments, routineAppointments } =
+          await getUserAppointments();
+        setConsultations(appointments);
+        setRoutineAppointments(routineAppointments);
+      } else {
+        const { appointments, routineAppointments } =
+          await getExpertAppointments();
+        setConsultations(appointments);
+        setRoutineAppointments(routineAppointments);
+      }
+    };
+    fetchAppointments();
+  }, [role]);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -107,7 +133,10 @@ const UserAppointmentsPage: React.FC = () => {
     );
     if (!appointment) return;
 
-    const success = await cancelAppointment(appointmentId, appointment.appointmentType);
+    const success = await cancelAppointment(
+      appointmentId,
+      appointment.appointmentType
+    );
     if (success) {
       toast.success("Appointment cancelled successfully");
     }
@@ -200,7 +229,12 @@ const UserAppointmentsPage: React.FC = () => {
         transition={{ duration: 0.5 }}
       >
         {/* Header */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={4}
+        >
           <Box>
             <Typography variant="h4" fontWeight="bold" gutterBottom>
               My Appointments
@@ -211,7 +245,15 @@ const UserAppointmentsPage: React.FC = () => {
           </Box>
           <Box display="flex" gap={1}>
             <Tooltip title="Refresh">
-              <IconButton onClick={() => fetchUserAppointments()}>
+              <IconButton
+                onClick={() => {
+                  if (role === "user") {
+                    getUserAppointments();
+                  } else {
+                    getExpertAppointments();
+                  }
+                }}
+              >
                 <Refresh />
               </IconButton>
             </Tooltip>
@@ -241,7 +283,7 @@ const UserAppointmentsPage: React.FC = () => {
             </Typography>
             <Typography variant="body2">Total Appointments</Typography>
           </Paper>
-          
+
           <Paper
             sx={{
               flex: "1",
@@ -258,7 +300,7 @@ const UserAppointmentsPage: React.FC = () => {
             </Typography>
             <Typography variant="body2">Upcoming</Typography>
           </Paper>
-          
+
           <Paper
             sx={{
               flex: "1",
@@ -275,7 +317,7 @@ const UserAppointmentsPage: React.FC = () => {
             </Typography>
             <Typography variant="body2">Consultations</Typography>
           </Paper>
-          
+
           <Paper
             sx={{
               flex: "1",
@@ -313,7 +355,9 @@ const UserAppointmentsPage: React.FC = () => {
                     <Select
                       value={filters.status}
                       label="Status"
-                      onChange={(e) => handleFilterChange("status", e.target.value)}
+                      onChange={(e) =>
+                        handleFilterChange("status", e.target.value)
+                      }
                     >
                       <MenuItem value="all">All Status</MenuItem>
                       <MenuItem value="scheduled">Scheduled</MenuItem>
@@ -321,7 +365,7 @@ const UserAppointmentsPage: React.FC = () => {
                       <MenuItem value="cancelled">Cancelled</MenuItem>
                     </Select>
                   </FormControl>
-                  
+
                   <Button
                     variant="outlined"
                     onClick={handleClearFilters}
@@ -367,12 +411,11 @@ const UserAppointmentsPage: React.FC = () => {
               >
                 {tabData.length === 0 ? (
                   <Alert severity="info" sx={{ mt: 2 }}>
-                    No appointments found. Book your first appointment to get started!
+                    No appointments found. Book your first appointment to get
+                    started!
                   </Alert>
                 ) : (
-                  <Box>
-                    {tabData.map(renderAppointmentCard)}
-                  </Box>
+                  <Box>{tabData.map(renderAppointmentCard)}</Box>
                 )}
               </motion.div>
             </TabPanel>
@@ -388,9 +431,7 @@ const UserAppointmentsPage: React.FC = () => {
                     No upcoming appointments. Schedule your next appointment!
                   </Alert>
                 ) : (
-                  <Box>
-                    {tabData.map(renderAppointmentCard)}
-                  </Box>
+                  <Box>{tabData.map(renderAppointmentCard)}</Box>
                 )}
               </motion.div>
             </TabPanel>
@@ -406,9 +447,7 @@ const UserAppointmentsPage: React.FC = () => {
                     No past appointments found.
                   </Alert>
                 ) : (
-                  <Box>
-                    {tabData.map(renderAppointmentCard)}
-                  </Box>
+                  <Box>{tabData.map(renderAppointmentCard)}</Box>
                 )}
               </motion.div>
             </TabPanel>
@@ -424,9 +463,7 @@ const UserAppointmentsPage: React.FC = () => {
                     No consultation appointments found.
                   </Alert>
                 ) : (
-                  <Box>
-                    {tabData.map(renderAppointmentCard)}
-                  </Box>
+                  <Box>{tabData.map(renderAppointmentCard)}</Box>
                 )}
               </motion.div>
             </TabPanel>
@@ -442,9 +479,7 @@ const UserAppointmentsPage: React.FC = () => {
                     No routine appointments found.
                   </Alert>
                 ) : (
-                  <Box>
-                    {tabData.map(renderAppointmentCard)}
-                  </Box>
+                  <Box>{tabData.map(renderAppointmentCard)}</Box>
                 )}
               </motion.div>
             </TabPanel>

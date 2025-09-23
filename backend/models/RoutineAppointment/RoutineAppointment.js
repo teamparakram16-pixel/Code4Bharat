@@ -2,22 +2,55 @@ import mongoose, { Schema } from "mongoose";
 
 // You may want to import your Zod schema and use z.infer<> for TypeScript types, but for Mongoose, define the shape here:
 const appointmentDataSchema = {
+  // Professional Information
   profession: { type: String, required: true },
-  dailyRoutineDescription: { type: String, required: true },
-  primaryHealthIssues: { type: String, required: true },
-  medicalHistory: {
-    chronicIllnesses: [{ type: String }],
-    pastSurgeries: [{ type: String }],
-    allergies: [{ type: String }],
+  workHours: { type: String, required: true },
+  workEnvironment: { type: String, required: true },
+  physicalActivity: { type: String, required: true },
+
+  // Daily Routine
+  wakeUpTime: { type: String, required: true },
+  sleepTime: { type: String, required: true },
+  mealTimes: {
+    breakfast: { type: String, required: true },
+    lunch: { type: String, required: true },
+    dinner: { type: String, required: true },
   },
-  currentMedications: [{ type: String }],
-  dietaryHabits: { type: String, required: true },
-  dietaryPreferences: [{ type: String }],
-  foodAllergies: [{ type: String }],
-  hydrationHabits: { type: String },
-  healthGoals: { type: String, required: true },
-  mentalHealth: { type: String, required: true },
-  substanceUse: { type: String },
+  exerciseTime: { type: String, required: true },
+  exerciseType: { type: String, required: true },
+
+  // Health Issues
+  currentHealthIssues: [{ type: String, required: true }],
+  healthConcerns: { type: String, required: true },
+  energyLevels: { type: String, required: true },
+  stressLevels: { type: String, required: true },
+
+  // Medical History
+  medicalHistory: { type: String, required: true },
+  surgeries: { type: String, required: true },
+  allergies: { type: String, required: true },
+  familyHistory: { type: String, required: true },
+
+  // Current Medications
+  medications: { type: String, required: true },
+  supplements: { type: String, required: true },
+
+  // Diet and Nutrition
+  dietType: { type: String, required: true },
+  foodPreferences: { type: String, required: true },
+  foodAvoidances: { type: String, required: true },
+  waterIntake: { type: String, required: true },
+
+  // Goals and Expectations
+  healthGoals: [{ type: String, required: true }],
+  specificConcerns: { type: String, required: true },
+  expectations: { type: String, required: true },
+
+  // Mental Health and Lifestyle
+  mentalHealthConcerns: { type: String, required: true },
+  lifeChanges: { type: String, required: true },
+  socialSupport: { type: String, required: true },
+  hobbies: { type: String, required: true },
 };
 
 const RoutineAppointmentSchema = new mongoose.Schema(

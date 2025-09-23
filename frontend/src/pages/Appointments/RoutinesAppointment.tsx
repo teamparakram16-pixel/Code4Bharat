@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Container, 
-  Card, 
-  CardContent, 
-  Typography, 
-  Button, 
-  Box, 
-  Alert, 
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import {
+  Container,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Box,
+  Alert,
   CircularProgress,
   Paper,
   Dialog,
@@ -16,38 +16,34 @@ import {
   DialogActions,
   Stepper,
   Step,
-  StepLabel
-} from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Psychology, 
-  Assignment, 
-  CheckCircle, 
-  Warning, 
+  StepLabel,
+} from "@mui/material";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Psychology,
+  Assignment,
+  CheckCircle,
+  Warning,
   NavigateNext,
-  Schedule 
-} from '@mui/icons-material';
-import { toast } from 'react-toastify';
-import AppointmentDataForm from '../../components/Forms/User/AppointmentDataForm/AppointmentDataForm.tsx';
-
-interface PrakritiStatus {
-  completed: boolean;
-  completedAt?: string;
-  fromRoutinesAppointment?: boolean;
-}
+  Schedule,
+} from "@mui/icons-material";
+import { toast } from "react-toastify";
+import AppointmentDataForm from "../../components/Forms/User/AppointmentDataForm/AppointmentDataForm.tsx";
+import useRoutineConsultation from "../../hooks/useRoutineConsultation/useRoutineConsultation";
+import usePrakrithi from "@/hooks/usePrakrithi/usePrakrithi.ts";
 
 const RoutinesAppointment: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  const [prakritiStatus, setPrakritiStatus] = useState<PrakritiStatus | null>(null);
+  const { id: doctorId } = useParams();
+
+  const [prakritiStatus, setPrakritiStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPrakritiDialog, setShowPrakritiDialog] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [, setAppointmentData] = useState(null);
 
-  // Check if user came from Prakriti analysis completion
-  const fromPrakritiCompletion = location.state?.fromPrakritiAnalysis || false;
+  const { createRoutineAppointment } = useRoutineConsultation();
+  const { fetchUserPrakriti } = usePrakrithi();
 
   useEffect(() => {
     checkPrakritiStatus();
@@ -56,54 +52,48 @@ const RoutinesAppointment: React.FC = () => {
   const checkPrakritiStatus = async () => {
     setLoading(true);
     try {
-      // Simulate API call to check Prakriti analysis status
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock response - replace with actual API
-      const mockStatus: PrakritiStatus = {
-        completed: Math.random() > 0.5, // Random for demo
-        completedAt: new Date().toISOString(),
-        fromRoutinesAppointment: fromPrakritiCompletion
-      };
-      
-      setPrakritiStatus(mockStatus);
-      
-      if (!mockStatus.completed) {
+      // Use the new API function
+      const status = await fetchUserPrakriti();
+      setPrakritiStatus(status);
+
+      if (status === null) {
         setShowPrakritiDialog(true);
       } else {
-        setCurrentStep(1); // Move to appointment form step
+        setCurrentStep(1);
       }
     } catch (error) {
-      console.error('Error checking Prakriti status:', error);
-      toast.error('Failed to check Prakriti analysis status');
+      console.error("Error checking Prakriti status:", error);
+      toast.error("Failed to check Prakriti analysis status");
     } finally {
       setLoading(false);
     }
   };
 
   const handlePrakritiNavigation = () => {
-    // Navigate to Prakriti analysis with state indicating it came from routines appointment
-    navigate('/prakrithi/analysis', { 
-      state: { fromRoutinesAppointment: true }
+    navigate("/prakrithi/analysis", {
+      state: { fromRoutinesAppointment: true },
     });
   };
 
   const handleAppointmentSubmit = async (data: any) => {
     try {
+      if (!doctorId) {
+        toast.error(
+          "Doctor ID is missing. Cannot proceed with the appointment."
+        );
+        return;
+      }
       setLoading(true);
-      
-      // API call to submit appointment data
-      console.log('Submitting appointment data:', data);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast.success('Appointment data submitted successfully!');
-      setAppointmentData(data);
-      setCurrentStep(2); // Move to success step
+      // Use the hook to submit appointment data
+      const response = await createRoutineAppointment(data, doctorId);
+      if (response) {
+        toast.success("Appointment data submitted successfully!");
+        setAppointmentData(data);
+        setCurrentStep(2);
+      }
     } catch (error) {
-      console.error('Error submitting appointment:', error);
-      toast.error('Failed to submit appointment data');
+      console.error("Error submitting appointment:", error);
+      toast.error("Failed to submit appointment data");
     } finally {
       setLoading(false);
     }
@@ -111,22 +101,22 @@ const RoutinesAppointment: React.FC = () => {
 
   const steps = [
     {
-      label: 'Prakriti Analysis Check',
-      description: 'Verify completion of Prakriti analysis'
+      label: "Prakriti Analysis Check",
+      description: "Verify completion of Prakriti analysis",
     },
     {
-      label: 'Appointment Information',
-      description: 'Provide detailed health and lifestyle information'
+      label: "Appointment Information",
+      description: "Provide detailed health and lifestyle information",
     },
     {
-      label: 'Confirmation',
-      description: 'Review and confirm your submission'
-    }
+      label: "Confirmation",
+      description: "Review and confirm your submission",
+    },
   ];
 
   if (loading && !prakritiStatus) {
     return (
-      <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
+      <Container maxWidth="md" sx={{ py: 8, textAlign: "center" }}>
         <CircularProgress size={60} />
         <Typography variant="h6" sx={{ mt: 2 }}>
           Checking Prakriti Analysis Status...
@@ -146,11 +136,11 @@ const RoutinesAppointment: React.FC = () => {
         <Paper
           elevation={0}
           sx={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            color: "white",
             p: 4,
             borderRadius: 3,
-            mb: 3
+            mb: 3,
           }}
         >
           <Box display="flex" alignItems="center" gap={2} mb={2}>
@@ -169,7 +159,11 @@ const RoutinesAppointment: React.FC = () => {
         {/* Progress Stepper */}
         <Card sx={{ mb: 3 }}>
           <CardContent>
-            <Stepper activeStep={currentStep} orientation="horizontal" alternativeLabel>
+            <Stepper
+              activeStep={currentStep}
+              orientation="horizontal"
+              alternativeLabel
+            >
               {steps.map((step, index) => (
                 <Step key={step.label} completed={currentStep > index}>
                   <StepLabel>{step.label}</StepLabel>
@@ -192,22 +186,31 @@ const RoutinesAppointment: React.FC = () => {
               <Card>
                 <CardContent sx={{ p: 4 }}>
                   <Box textAlign="center">
-                    <Psychology sx={{ fontSize: 80, color: 'primary.main', mb: 2 }} />
+                    <Psychology
+                      sx={{ fontSize: 80, color: "primary.main", mb: 2 }}
+                    />
                     <Typography variant="h5" fontWeight="bold" gutterBottom>
                       Prakriti Analysis Required
                     </Typography>
-                    <Typography variant="body1" color="text.secondary" paragraph>
-                      Routines appointments are based on your unique Prakriti (body constitution) analysis.
-                      This personalized approach helps our experts provide the most effective recommendations.
+                    <Typography
+                      variant="body1"
+                      color="text.secondary"
+                      paragraph
+                    >
+                      Routines appointments are based on your unique Prakriti
+                      (body constitution) analysis. This personalized approach
+                      helps our experts provide the most effective
+                      recommendations.
                     </Typography>
 
-                    {prakritiStatus?.completed ? (
+                    {prakritiStatus ? (
                       <Box>
                         <Alert severity="success" sx={{ mb: 3 }}>
                           <Box display="flex" alignItems="center" gap={1}>
                             <CheckCircle />
                             <Typography>
-                              Great! Your Prakriti analysis is completed. You can proceed with the appointment.
+                              Great! Your Prakriti analysis is completed. You
+                              can proceed with the appointment.
                             </Typography>
                           </Box>
                         </Alert>
@@ -226,7 +229,8 @@ const RoutinesAppointment: React.FC = () => {
                         <Box display="flex" alignItems="center" gap={1}>
                           <Warning />
                           <Typography>
-                            You haven't completed your Prakriti analysis yet. This is required for routines appointments.
+                            You haven't completed your Prakriti analysis yet.
+                            This is required for routines appointments.
                           </Typography>
                         </Box>
                       </Alert>
@@ -238,7 +242,7 @@ const RoutinesAppointment: React.FC = () => {
           )}
 
           {/* Step 1: Appointment Form */}
-          {currentStep === 1 && prakritiStatus?.completed && (
+          {currentStep === 1 && prakritiStatus && (
             <motion.div
               key="appointment-form"
               initial={{ opacity: 0, x: 50 }}
@@ -254,9 +258,10 @@ const RoutinesAppointment: React.FC = () => {
                       Appointment Information
                     </Typography>
                   </Box>
-                  
+
                   <Alert severity="info" sx={{ mb: 3 }}>
-                    Please provide detailed information to help our experts prepare a personalized routine for you.
+                    Please provide detailed information to help our experts
+                    prepare a personalized routine for you.
                   </Alert>
 
                   <AppointmentDataForm
@@ -278,28 +283,28 @@ const RoutinesAppointment: React.FC = () => {
               transition={{ duration: 0.3 }}
             >
               <Card>
-                <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                  <CheckCircle sx={{ fontSize: 80, color: 'success.main', mb: 2 }} />
+                <CardContent sx={{ p: 4, textAlign: "center" }}>
+                  <CheckCircle
+                    sx={{ fontSize: 80, color: "success.main", mb: 2 }}
+                  />
                   <Typography variant="h5" fontWeight="bold" gutterBottom>
                     Appointment Submitted Successfully!
                   </Typography>
                   <Typography variant="body1" color="text.secondary" paragraph>
-                    Thank you for providing your detailed information. Our experts will review your 
-                    Prakriti analysis and the information you've provided to create a personalized 
-                    routine plan for you.
+                    Thank you for providing your detailed information. Our
+                    experts will review your Prakriti analysis and the
+                    information you've provided to create a personalized routine
+                    plan for you.
                   </Typography>
-                  
+
                   <Box display="flex" gap={2} justifyContent="center" mt={3}>
                     <Button
                       variant="contained"
-                      onClick={() => navigate('/u/appointments')}
+                      onClick={() => navigate("/u/appointments")}
                     >
                       View My Appointments
                     </Button>
-                    <Button
-                      variant="outlined"
-                      onClick={() => navigate('/')}
-                    >
+                    <Button variant="outlined" onClick={() => navigate("/")}>
                       Back to Home
                     </Button>
                   </Box>
@@ -324,19 +329,18 @@ const RoutinesAppointment: React.FC = () => {
           </DialogTitle>
           <DialogContent>
             <Typography paragraph>
-              To book a routines appointment, you must first complete your Prakriti analysis. 
-              This analysis helps us understand your unique body constitution and provide 
-              personalized recommendations.
+              To book a routines appointment, you must first complete your
+              Prakriti analysis. This analysis helps us understand your unique
+              body constitution and provide personalized recommendations.
             </Typography>
             <Alert severity="info">
-              The Prakriti analysis takes about 10-15 minutes to complete and includes 
-              questions about your physical characteristics, preferences, and lifestyle.
+              The Prakriti analysis takes about 10-15 minutes to complete and
+              includes questions about your physical characteristics,
+              preferences, and lifestyle.
             </Alert>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setShowPrakritiDialog(false)}>
-              Cancel
-            </Button>
+            <Button onClick={() => setShowPrakritiDialog(false)}>Cancel</Button>
             <Button
               variant="contained"
               onClick={handlePrakritiNavigation}
