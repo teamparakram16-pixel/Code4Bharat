@@ -4,6 +4,7 @@ import { customAlphabet } from "nanoid";
 import wrapAsync from "../utils/wrapAsync.js";
 import RoutineAppointment from "../models/RoutineAppointment/RoutineAppointment.js";
 import ExpressError from "../utils/expressError.js";
+import Expert from "../models/Expert/Expert.js";
 
 const nanoid = customAlphabet(
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
@@ -44,16 +45,16 @@ export const createAppointment = wrapAsync(async (req, res) => {
   });
 
   // Send confirmation email to expert
-  try {
-    const expert = await Expert.findById(expertId);
-    if (expert) {
-      await sendAppointmentConfirmationMail(expert, appointment);
-    } else {
-      console.warn("Expert not found, email not sent.");
-    }
-  } catch (err) {
-    console.error("Failed to send appointment confirmation email:", err);
-  }
+  // try {
+  //   const expert = await Expert.findById(expertId);
+  //   if (expert) {
+  //     await sendAppointmentConfirmationMail(expert, appointment);
+  //   } else {
+  //     console.warn("Expert not found, email not sent.");
+  //   }
+  // } catch (err) {
+  //   console.error("Failed to send appointment confirmation email:", err);
+  // }
 
   res
     .status(201)
@@ -66,7 +67,9 @@ export const getUserAppointments = wrapAsync(async (req, res) => {
   const appointments = await Appointment.find({ user: userId })
     .populate("expert", "name email")
     .populate("prakriti");
-  res.status(200).json({ appointments });
+
+  const routineAppointments = await RoutineAppointment.find({ userId });
+  res.status(200).json({ appointments, routineAppointments });
 });
 
 // Get all appointments for logged-in doctor/expert
@@ -145,7 +148,7 @@ export const createRoutineAppointment = async (req, res) => {
   }
 
   // Fetch user's PrakrithiAnalysis (assuming user.prakrithiAnalysis holds the ObjectId)
-  let prakrithiAnalysisId = req.user.prakrithiAnalysis.analysisRef;
+  let prakrithiAnalysisId = req.user.prakritiAnalysis.analysisRef;
   if (!prakrithiAnalysisId) {
     throw new ExpressError(400, "User does not have a Prakrithi Analysis.");
   }

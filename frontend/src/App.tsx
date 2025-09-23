@@ -59,16 +59,18 @@ import UserSuccessStoriesPage from "./pages/UserPosts/userposts";
 import { UserPostsPage } from "./pages/LikedPages/likePages";
 import PrivacyPolicy from "./pages/PrivacyPolicy/privacyPolicy";
 import CookiePolicy from "./pages/Cookies/cookiePolicy";
-import UpdateSuccessStory from "./components/Forms/User/UpdateSuccessStory/UpdateSuccessStory"
+import UpdateSuccessStory from "./components/Forms/User/UpdateSuccessStory/UpdateSuccessStory";
 import ExpertChangePassword from "./pages/ChangePassword/ExpertChangePassword/ExpertChangePassword";
 import UserChangePassword from "./pages/ChangePassword/UserChangePassword/UserChangePassword";
-import  UpdatePostForm from "./components/Forms/Expert/UpdatePostForm/UpdatePostForm"
+import UpdatePostForm from "./components/Forms/Expert/UpdatePostForm/UpdatePostForm";
 import UpdateRoutineForm from "./components/Forms/Expert/UpdateRoutineForm/UpdateRoutineForm";
 import DoctorAppointments from "./pages/Expert/DoctorAppointments/DoctorAppointments";
-import ConsultationDetails from "./pages/Expert/ConsultationDetails/ConsultationDetails";
-import RoutinesConsultationDetails from "./pages/Expert/RoutinesConsultationDetails/RoutinesConsultationDetails";
+// import ConsultationDetails from "./pages/Expert/ConsultationDetails/ConsultationDetails";
+// import RoutinesConsultationDetails from "./pages/Expert/RoutinesConsultationDetails/RoutinesConsultationDetails";
 import MeetingManagement from "./pages/MeetingManagement/MeetingManagement";
 import UserAppointmentsPage from "./pages/User/UserAppointments/UserAppointmentsPage";
+import ConsultationDetails from "./pages/Expert/ConsultationDetails/ConsultationDetails";
+import RoutinesConsultationDetails from "./pages/Expert/RoutinesConsultationDetails/RoutinesConsultationDetails";
 const App = () => {
   const { isLoggedIn } = useAuth();
 
@@ -145,15 +147,27 @@ const App = () => {
             <Route path="/myposts" element={<UserSuccessStoriesPage />} />
             <Route path="/likedposts" element={<UserPostsPage />} />
             {/* change password */}
-            <Route path="/user/change-password" element={<UserChangePassword />} />
+            <Route
+              path="/user/change-password"
+              element={<UserChangePassword />}
+            />
             {/* Appointment Routes */}
-            <Route path="/doctor-profile/:id/appointments/consultation" element={<Appointment />} />
-            <Route path="/doctor-profile/:id/appointments/routines" element={<RoutinesAppointment />} />
+            <Route
+              path="/doctor-profile/:id/appointments/consultation"
+              element={<Appointment />}
+            />
+            <Route
+              path="/doctor-profile/:id/appointments/routines"
+              element={<RoutinesAppointment />}
+            />
             {/* User Appointments Page */}
-            <Route path="/user/appointments" element={<UserAppointmentsPage />} />
+            <Route
+              path="/user/appointments"
+              element={<UserAppointmentsPage />}
+            />
           </Route>
-           <Route path="/live-streaming" element={<LiveStreaming />} />
-           <Route path="/livestreaming/:id" element={<LiveStreaming />} />
+          <Route path="/live-streaming" element={<LiveStreaming />} />
+          <Route path="/livestreaming/:id" element={<LiveStreaming />} />
           <Route element={<ExpertProtectedRoute />}>
             <Route
               path="/complete-profile/expert"
@@ -168,16 +182,26 @@ const App = () => {
             <Route path="/expert/profile" element={<ExpertProfilePage />} />
             <Route path="/posts/create" element={<CreatePost />} />
             {/* change password */}
-            <Route path="/expert/change-password" element={<ExpertChangePassword />} />
+            <Route
+              path="/expert/change-password"
+              element={<ExpertChangePassword />}
+            />
             {/* Doctor Appointment Routes */}
-            <Route path="/appointments" element={<DoctorAppointments />} />
-            <Route path="/appointments/consultation/:id" element={<ConsultationDetails />} />
-            <Route path="/appointments/routines/:id" element={<RoutinesConsultationDetails />} />
+            <Route path="/u/appointments" element={<DoctorAppointments />} />
+
             {/* Meeting Management Route */}
             <Route path="/meetings" element={<MeetingManagement />} />
           </Route>
 
           <Route element={<ProtectedRoute />}>
+            <Route
+              path="/appointments/consultation/:id"
+              element={<ConsultationDetails />}
+            />
+            <Route
+              path="/appointments/routines/:id"
+              element={<RoutinesConsultationDetails />}
+            />
             <Route path="/success-stories/:id" element={<SuccessStoryPost />} />
             <Route path="/gposts/:id" element={<GeneralPost />} />
             <Route path="/routines/:id" element={<RoutinePost />} />
@@ -207,10 +231,7 @@ const App = () => {
               path="/routines/update/:id"
               element={<UpdateRoutineForm />}
             />
-             <Route
-              path="/gposts/update/:id"
-              element={<UpdatePostForm />}
-            />
+            <Route path="/gposts/update/:id" element={<UpdatePostForm />} />
           </Route>
 
           <Route path="*" element={<PageNotFound />} />

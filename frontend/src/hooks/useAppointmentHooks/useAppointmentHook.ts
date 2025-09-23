@@ -14,35 +14,59 @@ export const useAppointmentsHooks = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-const createAppointment = async (payload: AppointmentPayload) => {
-  try {
-    setLoading(true);
-    setError(null);
-
-    const response = await api.post(`${import.meta.env.VITE_SERVER_URL}/api/appointment`, payload);
-    toast.success("Appointment booked successfully!");
-    return response.data.appointment; 
-  } catch (err: any) {
-    setError(err.response?.data?.message || err.message || "Failed to book appointment");
-    toast.error(err.response?.data?.message || err.message || "Error booking appointment");
-    throw err;
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  // 📌 Get User’s Appointments
-  const getUserAppointments = async () => {
+  const createAppointment = async (payload: AppointmentPayload) => {
     try {
       setLoading(true);
       setError(null);
 
-      const { data } = await api.get(`${import.meta.env.VITE_SERVER_URL}/api/api/appointment/consultations/user`);
-      return data.appointments;
+      const response = await api.post(
+        `${import.meta.env.VITE_SERVER_URL}/api/appointment`,
+        payload
+      );
+      toast.success("Appointment booked successfully!");
+      return response.data.appointment;
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Failed to fetch appointments");
-      toast.error(err.response?.data?.message || err.message || "Error fetching appointments");
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to book appointment"
+      );
+      toast.error(
+        err.response?.data?.message ||
+          err.message ||
+          "Error booking appointment"
+      );
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 📌 Get User’s Appointments
+  const getUserAppointments: () => Promise<{
+    appointments: any[];
+    routineAppointments: any[];
+  }> = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data = await api.get(
+        `${import.meta.env.VITE_SERVER_URL}/api/appointment/consulations/user`
+      );
+
+      return data;
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to fetch appointments"
+      );
+      toast.error(
+        err.response?.data?.message ||
+          err.message ||
+          "Error fetching appointments"
+      );
       throw err;
     } finally {
       setLoading(false);
@@ -50,16 +74,31 @@ const createAppointment = async (payload: AppointmentPayload) => {
   };
 
   // 📌 Get Expert’s Appointments
-  const getExpertAppointments = async () => {
+  const getExpertAppointments: () => Promise<{
+    appointments: any[];
+    routineAppointments: any[];
+  }> = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const { data } = await api.get("/api/appointment/consultations/expert");
-      return data.appointments;
+      const data = await api.get(
+        `${
+          import.meta.env.VITE_SERVER_URL
+        }/api/appointment/consultations/expert`
+      );
+      return data;
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Failed to fetch appointments");
-      toast.error(err.response?.data?.message || err.message || "Error fetching appointments");
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to fetch appointments"
+      );
+      toast.error(
+        err.response?.data?.message ||
+          err.message ||
+          "Error fetching appointments"
+      );
       throw err;
     } finally {
       setLoading(false);
