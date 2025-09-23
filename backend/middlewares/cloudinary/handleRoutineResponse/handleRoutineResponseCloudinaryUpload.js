@@ -16,8 +16,10 @@ export const handleRoutineResponseCloudinaryUpload = async (req, res, next) => {
       },
     });
 
+    console.log("Uploaded to Cloudinary:", uploaded);
+
     // Attach PDF URL to request
-    req.routineResponsePdfUrl = uploaded.routineResponse;
+    req.routineResponsePdfUrl = uploaded.routineResponse[0].url;
 
     next();
   } catch (error) {

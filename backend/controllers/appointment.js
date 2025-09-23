@@ -18,7 +18,9 @@ export const createAppointment = wrapAsync(async (req, res) => {
 
   // Validate date & time
   if (!appointmentDate || !appointmentTime) {
-    return res.status(400).json({ message: "Appointment date and time are required." });
+    return res
+      .status(400)
+      .json({ message: "Appointment date and time are required." });
   }
 
   const datePart = new Date(appointmentDate); // YYYY-MM-DD
@@ -32,7 +34,9 @@ export const createAppointment = wrapAsync(async (req, res) => {
   datePart.setHours(parseInt(timePart[0]), parseInt(timePart[1]), 0, 0);
 
   if (datePart < new Date()) {
-    return res.status(400).json({ message: "Appointment must be in the future." });
+    return res
+      .status(400)
+      .json({ message: "Appointment must be in the future." });
   }
 
   // Check Prakriti exists
@@ -74,7 +78,6 @@ export const createAppointment = wrapAsync(async (req, res) => {
     appointment,
   });
 });
-
 
 // Get all appointments of logged-in user
 export const getUserAppointments = wrapAsync(async (req, res) => {
@@ -223,4 +226,27 @@ export const routineResponseController = async (req, res) => {
     message: "Routine response uploaded successfully.",
     routineResponse: appointment.routineResponse,
   });
+};
+
+export const getRoutineAppointmentById = async (req, res) => {
+  const { id } = req.params;
+  const appointment = await RoutineAppointment.findById(id)
+    .populate("userId", "username email profile")
+    .populate("doctorId", "username email profile")
+    .populate("prakrithiAnalysis");
+
+  if (!appointment) {
+    throw new ExpressError(404, "Routine appointment not found.");
+  }
+
+  // Convert Mongoose document to plain object
+  const appointmentObj = appointment.toObject();
+
+  // Rename userId and doctorId to user and doctor
+  appointmentObj.user = appointmentObj.userId;
+  delete appointmentObj.userId;
+  appointmentObj.doctor = appointmentObj.doctorId;
+  delete appointmentObj.doctorId;
+
+  res.status(200).json({ routineAppointment: appointmentObj });
 };
