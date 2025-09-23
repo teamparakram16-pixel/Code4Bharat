@@ -49,7 +49,6 @@ const DoctorProfile: React.FC = () => {
   // State for appointment menu
   const [appointmentMenuAnchor, setAppointmentMenuAnchor] = useState<null | HTMLElement>(null);
   const isAppointmentMenuOpen = Boolean(appointmentMenuAnchor);
-
   useEffect(() => {
     if (!id) return;
 
@@ -75,6 +74,8 @@ const DoctorProfile: React.FC = () => {
 
     fetchPosts();
   }, [id, filter]);
+
+
 
 
 
