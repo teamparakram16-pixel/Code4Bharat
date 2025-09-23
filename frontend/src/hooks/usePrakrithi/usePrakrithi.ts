@@ -46,6 +46,21 @@ const usePrakrithi = () => {
     }
   };
 
+  const fetchUserPrakriti: () => Promise<string | null> = async () => {
+    try {
+      const response = await get(
+        `${import.meta.env.VITE_SERVER_URL}/api/users/prakrithi-analysis`
+      );
+
+
+      const prakrithiAnalysis = response.prakrithiAnalysis.analysisRef;
+      // Adapt response to PrakritiStatus shape
+      return prakrithiAnalysis;
+    } catch (error) {
+      handleAxiosError(error);
+    }
+  };
+
   const emailPkPdf = async (pdfBlob: Blob | null) => {
     try {
       if (!pdfBlob) return;
@@ -72,6 +87,7 @@ const usePrakrithi = () => {
     getSimilarPrakrithiUsers,
     findPrakrithi,
     emailPkPdf,
+    fetchUserPrakriti,
   };
 };
 

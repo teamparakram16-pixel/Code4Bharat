@@ -8,13 +8,12 @@ const useRoutineConsultation = () => {
   const { post, patch, get } = useApi();
 
   // Create routine appointment
-  const createRoutineAppointment = async (formData: any) => {
+  const createRoutineAppointment = async (formData: any, doctorId: string) => {
     try {
       const response = await post(
         `${import.meta.env.VITE_SERVER_URL}/api/appointment/routine`,
-        formData
+        { appointmentData: formData, doctorId }
       );
-      toast.success("Routine appointment created successfully");
       return response;
     } catch (error: any) {
       handleAxiosError(error);

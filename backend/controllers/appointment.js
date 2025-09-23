@@ -4,6 +4,7 @@ import { customAlphabet } from "nanoid";
 import wrapAsync from "../utils/wrapAsync.js";
 import RoutineAppointment from "../models/RoutineAppointment/RoutineAppointment.js";
 import ExpressError from "../utils/expressError.js";
+import Expert from "../models/Expert/Expert.js";
 
 const nanoid = customAlphabet(
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
@@ -145,7 +146,7 @@ export const createRoutineAppointment = async (req, res) => {
   }
 
   // Fetch user's PrakrithiAnalysis (assuming user.prakrithiAnalysis holds the ObjectId)
-  let prakrithiAnalysisId = req.user.prakrithiAnalysis.analysisRef;
+  let prakrithiAnalysisId = req.user.prakritiAnalysis.analysisRef;
   if (!prakrithiAnalysisId) {
     throw new ExpressError(400, "User does not have a Prakrithi Analysis.");
   }
