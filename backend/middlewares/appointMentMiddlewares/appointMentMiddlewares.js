@@ -1,4 +1,6 @@
-import RoutineAppointment from "../../models/RoutineAppointment.js";
+
+import RoutineAppointment from "../../models/RoutineAppointment/RoutineAppointment.js";
+
 import ExpressError from "../../utils/expressError.js";
 
 // Middleware to check if appointment exists and doctor is authorized

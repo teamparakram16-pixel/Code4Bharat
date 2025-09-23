@@ -201,7 +201,7 @@ const ProfileHeader = ({
                 <Button
                   variant="contained"
                   startIcon={<CalendarTodayRounded />}
-                  onClick={onBookAppointment}
+                  onClick={(event) => onBookAppointment(event)}
                   sx={{
                     borderRadius: 3,
                     px: 3,
