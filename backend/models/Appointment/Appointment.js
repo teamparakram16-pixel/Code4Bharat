@@ -1,4 +1,3 @@
-// models/Appointment.js
 import mongoose from "mongoose";
 
 const appointmentSchema = new mongoose.Schema(
@@ -44,8 +43,7 @@ const appointmentSchema = new mongoose.Schema(
       default: null,
     },
   },
-  { timestamps: true }
-);
+ { timestamps: true });
 
 const Appointment = mongoose.model("Appointment", appointmentSchema);
 export default Appointment;
