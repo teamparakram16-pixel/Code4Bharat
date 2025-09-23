@@ -51,7 +51,7 @@ export const useAppointmentsHooks = () => {
       setError(null);
 
       const data = await api.get(
-        `${import.meta.env.VITE_SERVER_URL}/api/appointment/consulations/user`
+        `${import.meta.env.VITE_SERVER_URL}/api/appointment/consultations/user`
       );
 
       return data;

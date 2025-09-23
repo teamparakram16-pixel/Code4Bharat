@@ -57,7 +57,7 @@ const Appointment: React.FC = () => {
         description: notes.trim(),
       });
       toast.success("Appointment booked successfully!");
-      navigate("/u/appointments");
+      navigate("/user/appointments");
     } catch (error: any) {
       console.error(error);
       setError(error.message || "Failed to book appointment");
