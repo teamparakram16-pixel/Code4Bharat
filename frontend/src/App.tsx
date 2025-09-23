@@ -68,6 +68,7 @@ import DoctorAppointments from "./pages/Expert/DoctorAppointments/DoctorAppointm
 import ConsultationDetails from "./pages/Expert/ConsultationDetails/ConsultationDetails";
 import RoutinesConsultationDetails from "./pages/Expert/RoutinesConsultationDetails/RoutinesConsultationDetails";
 import MeetingManagement from "./pages/MeetingManagement/MeetingManagement";
+import UserAppointmentsPage from "./pages/User/UserAppointments/UserAppointmentsPage";
 const App = () => {
   const { isLoggedIn } = useAuth();
 
@@ -148,6 +149,8 @@ const App = () => {
             {/* Appointment Routes */}
             <Route path="/doctor-profile/:id/appointments/consultation" element={<Appointment />} />
             <Route path="/doctor-profile/:id/appointments/routines" element={<RoutinesAppointment />} />
+            {/* User Appointments Page */}
+            <Route path="/user/appointments" element={<UserAppointmentsPage />} />
           </Route>
            <Route path="/live-streaming" element={<LiveStreaming />} />
            <Route path="/livestreaming/:id" element={<LiveStreaming />} />

@@ -41,6 +41,7 @@ import {
   Psychology as PsychologyIcon,
   Edit as EditIcon,
   Notifications as NotificationsIcon,
+  CalendarToday as CalendarIcon,
 } from "@mui/icons-material";
 import { useAuth } from "@/context/AuthContext";
 import useApi from "@/hooks/useApi/useApi";
@@ -632,6 +633,33 @@ const PageNavBar: FC = () => {
                     )}
 
                     <Divider />
+                    {role === "expert" ? (
+                      <MenuItem
+                        onClick={() => {
+                          handleMenuClose();
+                          navigate("/appointments");
+                        }}
+                        sx={{ py: 1.5 }}
+                      >
+                        <CalendarIcon
+                          sx={{ mr: 1.5, color: "text.secondary" }}
+                        />
+                        <Typography variant="body2">My Appointments</Typography>
+                      </MenuItem>
+                    ) : (
+                      <MenuItem
+                        onClick={() => {
+                          handleMenuClose();
+                          navigate("/user/appointments");
+                        }}
+                        sx={{ py: 1.5 }}
+                      >
+                        <CalendarIcon
+                          sx={{ mr: 1.5, color: "text.secondary" }}
+                        />
+                        <Typography variant="body2">My Appointments</Typography>
+                      </MenuItem>
+                    )}
                     <MenuItem
                       onClick={() => {
                         handleMenuClose();
