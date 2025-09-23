@@ -1,7 +1,10 @@
 import express from "express";
 import wrapAsync from "../utils/wrapAsync.js";
 import routineController from "../controllers/routine.js";
-
+import {
+  createCommentForModel,
+  getCommentsForModel,
+} from "../controllers/commentController.js";
 import Routine from "../models/Routines/Routines.js";
 import { validateComment } from "../middlewares/validationMiddleware/validationMiddlewares.js";
 import { validateRoutine } from "../middlewares/validationMiddleware/validationMiddlewares.js";
@@ -16,7 +19,7 @@ import {
 import { verifyPostData } from "../middlewares/verifyPostMiddleware.js";
 import { handleRoutineImageDiskUpload } from "../middlewares/cloudinary/handleRoutinesImage/handleRoutineImageDiskUpload.js";
 import { handleRoutinePostCloudinaryUpload } from "../middlewares/cloudinary/handleRoutinesImage/handleRoutineImageUpload.js";
-// const memoryUpload = multer({ storage: multer.memoryStorage() });
+const memoryUpload = multer({ storage: multer.memoryStorage() });
 
 const router = express.Router();
 
@@ -51,11 +54,11 @@ router.delete(
 );
 
 // Nested comment routes for routines
-// router.get("/:id/comments", wrapAsync(getCommentsForModel("Routine")));
-// router.post(
-//   "/:id/comments",
-//   validateComment,
-//   wrapAsync(createCommentForModel(Routine, "Routine"))
-// );
+router.get("/:id/comments", wrapAsync(getCommentsForModel("Routine")));
+router.post(
+  "/:id/comments",
+  validateComment,
+  wrapAsync(createCommentForModel(Routine, "Routine"))
+);
 
 export default router;

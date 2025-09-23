@@ -11,11 +11,11 @@ import session from "express-session";
 import bodyParser from "body-parser";
 import errorHandler from "./utils/errorHandler.js";
 import { cleanupTempFiles } from "./utils/cleanupTempFiles.js";
+import chatRoutes from "./routes/chat.js";
 import { Server } from "socket.io";
 
-import chatRoutes from "./routes/chat.js";
-
 import successStoryRoute from "./routes/successStory.js";
+import contactUsRoute from "./routes/contactUs.js";
 
 import { Strategy as localStrategy } from "passport-local";
 import Expert from "./models/Expert/Expert.js";
@@ -43,7 +43,9 @@ import premiumRoute from "./routes/premium.js";
 
 import Message from "./models/Message/Message.js";
 import Chat from "./models/Chat/Chat.js";
-
+import PremiumOption from "./models/PremiumOption/premiumOption.js";
+import medicineRoutes from "./routes/medicine.js";
+import connectToSocket from "./controllers/socketController.js";
 const app = express();
 
 main()
@@ -98,6 +100,7 @@ const sessionOptions = {
 app.set("trust proxy", 1);
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended:true }))
 
 const corsOptions = {
   origin: ["https://arogyapaths.netlify.app", "http://localhost:5173"],
@@ -183,13 +186,13 @@ app.use("/api/experts", expertRoute);
 app.use("/api/users", userRoutes);
 
 app.use("/api/prakrithi", prakrathiRoutes);
-
+app.use("/api/medicines",medicineRoutes)
 // app.use("/api/healthChallenge", healthChallenge);
 
 app.use("/api/chat", chatRoutes);
 
 app.use("/api/premium", premiumRoute);
-// app.use("/api/contact", contactUsRoute);
+app.use("/api/contact", contactUsRoute);
 
 // -------------------Deployment------------------//
 
@@ -216,6 +219,8 @@ const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
   console.log("Server listening on port: ", port);
 });
+
+const io = connectToSocket(server);
 
 // const io = new Server(server, {
 //   pingTimeout: 60000,

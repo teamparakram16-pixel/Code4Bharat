@@ -2,6 +2,8 @@ import Expert from "../models/Expert/Expert.js";
 import ExpressError from "../utils/expressError.js";
 import Routine from "../models/Routines/Routines.js";
 import Post from "../models/Post/Post.js";
+import { successStoryEmail } from "../utils/sendssstorystatus.js";
+
 // PATCH /experts/complete-profile
 export const completeProfile = async (req, res) => {
   const expertId = req.user._id;
@@ -352,6 +354,29 @@ const changePassword = async (req, res) => {
 
 }
 
+const sendsstorystatus = async (req, res) => {
+  try {
+    const { postId, doctorName, reason, receiverEmail } = req.body;
+    if (!postId || !doctorName || !receiverEmail)
+      return res.status(400).json({ message: "Fill all details correctly !" });
+
+    const response = await successStoryEmail(postId, doctorName, reason, receiverEmail);
+
+    if (!response)
+      return res.status(400).json({ message: "Error sending Email to the user" });
+
+    res.status(200).json({
+      success: true,
+      message: reason && reason.trim()
+        ? "Rejection email sent successfully."
+        : "Verification email sent successfully."
+    });
+  } catch (error) {
+      console.log("Error sending email :" , error.message)
+  }
+
+}
+
 export default {
   completeProfile,
   getAllDoctors,
@@ -364,5 +389,6 @@ export default {
   getBookmarks,
   addBookmarks,
   removeBookmarks,
-  changePassword
+  changePassword,
+  sendsstorystatus
 };
