@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -9,44 +9,31 @@ import {
   Avatar,
   Chip,
   Divider,
-  Paper,
   Stack,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
-  Alert,
   IconButton,
   Container,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  LinearProgress,
   MenuItem,
-} from '@mui/material';
+} from "@mui/material";
 import {
-  ArrowBack,
-  CalendarToday,
-  AccessTime,
-  Phone,
   Share,
   Assignment,
-  ExpandMore,
   FitnessCenter,
   Restaurant,
-  Psychology,
   SelfImprovement,
   Spa,
-  LocalHospital,
-  Person,
-  Warning,
-  Info,
   Add,
   Delete,
-} from '@mui/icons-material';
-import { motion } from 'framer-motion';
-import dayjs from 'dayjs';
+} from "@mui/icons-material";
+import { motion } from "framer-motion";
+import dayjs from "dayjs";
+import { useAppointmentsHooks } from "@/hooks/useAppointmentHooks/useAppointmentHook"; // Import your hook
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib"; // Add these imports at the top
+import { toast } from "react-toastify";
 
 interface Patient {
   id: string;
@@ -63,7 +50,7 @@ interface PrakritiData {
   vata: number;
   pitta: number;
   kapha: number;
-  dominantDosha: 'vata' | 'pitta' | 'kapha';
+  dominantDosha: "vata" | "pitta" | "kapha";
   assessmentDate: string;
 }
 
@@ -78,7 +65,7 @@ interface HealthMetrics {
 
 interface RoutineItem {
   id: string;
-  category: 'exercise' | 'diet' | 'lifestyle' | 'meditation';
+  category: "exercise" | "diet" | "lifestyle" | "meditation";
   title: string;
   description: string;
   duration: string;
@@ -91,8 +78,8 @@ interface RoutinesConsultation {
   patient: Patient;
   date: string;
   time: string;
-  status: 'pending' | 'routine_shared' | 'completed';
-  urgency: 'low' | 'medium' | 'high';
+  status: "pending" | "routine_shared" | "completed";
+  urgency: "low" | "medium" | "high";
   goals: string[];
   concerns: string[];
   notes: string;
@@ -106,73 +93,119 @@ interface RoutinesConsultation {
 
 // Mock data
 const mockRoutinesConsultation: RoutinesConsultation = {
-  id: '2',
+  id: "2",
   patient: {
-    id: 'p2',
-    name: 'Priya Sharma',
+    id: "p2",
+    name: "Priya Sharma",
     age: 28,
-    gender: 'Female',
-    phone: '+91 87654 32109',
-    email: 'priya.sharma@email.com',
-    address: '456 Brigade Road, Bangalore, Karnataka 560025',
+    gender: "Female",
+    phone: "‪+91 87654 32109‬",
+    email: "priya.sharma@email.com",
+    address: "456 Brigade Road, Bangalore, Karnataka 560025",
   },
-  date: '2024-03-20',
-  time: '11:30 AM',
-  status: 'pending',
-  urgency: 'medium',
-  goals: ['Weight management', 'Stress reduction', 'Better sleep', 'Increased energy'],
-  concerns: ['Irregular sleep patterns', 'Digestive issues', 'Work stress', 'Low energy'],
-  notes: 'Looking for a personalized Ayurvedic routine to improve overall health and well-being. Work schedule is demanding with irregular hours. Interested in meditation and yoga practices.',
+  date: "2024-03-20",
+  time: "11:30 AM",
+  status: "pending",
+  urgency: "medium",
+  goals: [
+    "Weight management",
+    "Stress reduction",
+    "Better sleep",
+    "Increased energy",
+  ],
+  concerns: [
+    "Irregular sleep patterns",
+    "Digestive issues",
+    "Work stress",
+    "Low energy",
+  ],
+  notes:
+    "Looking for a personalized Ayurvedic routine to improve overall health and well-being. Work schedule is demanding with irregular hours. Interested in meditation and yoga practices.",
   prakritiData: {
     vata: 65,
     pitta: 70,
     kapha: 25,
-    dominantDosha: 'pitta',
-    assessmentDate: '2024-03-15',
+    dominantDosha: "pitta",
+    assessmentDate: "2024-03-15",
   },
   healthMetrics: {
     bmi: 22.5,
-    bloodPressure: '120/80',
+    bloodPressure: "120/80",
     heartRate: 72,
     sleepQuality: 4,
     stressLevel: 7,
     energyLevel: 5,
   },
-  createdAt: '2024-03-19T16:45:00Z',
-  updatedAt: '2024-03-19T16:45:00Z',
+  createdAt: "2024-03-19T16:45:00Z",
+  updatedAt: "2024-03-19T16:45:00Z",
 };
 
 const RoutinesConsultationDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [consultation, setConsultation] = useState<RoutinesConsultation | null>(null);
+  const {
+    getRoutineAppointmentById,
+    loading,
+    shareRoutineAppointment,
+    submit,
+  } = useAppointmentsHooks();
+
+  const [consultation, setConsultation] = useState<any>(null);
   const [shareRoutineDialogOpen, setShareRoutineDialogOpen] = useState(false);
-  const [routineItems, setRoutineItems] = useState<RoutineItem[]>([]);
-  const [doctorNotes, setDoctorNotes] = useState('');
-  const [newRoutineItem, setNewRoutineItem] = useState<Partial<RoutineItem>>({
-    category: 'exercise',
-    title: '',
-    description: '',
-    duration: '',
-    frequency: '',
-    instructions: '',
+  const [routineItems, setRoutineItems] = useState<any[]>([]);
+  const [doctorNotes, setDoctorNotes] = useState("");
+  const [newRoutineItem, setNewRoutineItem] = useState<Partial<any>>({
+    category: "exercise",
+    title: "",
+    description: "",
+    duration: "",
+    frequency: "",
+    instructions: "",
   });
+  const [pdf, setPdf] = useState<Blob | null>(null);
+  const [loadingPdf, setLoadingPdf] = useState(false);
 
   useEffect(() => {
-    // Simulate API call to fetch consultation details
-    setConsultation(mockRoutinesConsultation);
+    const fetchConsultation = async () => {
+      if (!id) return;
+      try {
+        console.log("Fetching Routine Appointment with ID:", id);
+        const data = await getRoutineAppointmentById(id);
+        setConsultation(data);
+        // If sharedRoutine exists, set it
+        // if (data.routineAppointment.routineResponse?.sharedRoutine) {
+        //   setRoutineItems(
+        //     data.routineAppointment.routineResponse.sharedRoutine
+        //   );
+        // }
+        // if (data.routineAppointment.routineResponse?.doctorNotes) {
+        //   setDoctorNotes(data.routineAppointment.routineResponse.doctorNotes);
+        // }
+      } catch (error) {
+        // Handle error (show toast or alert)
+      }
+    };
+    fetchConsultation();
   }, [id]);
 
   const handleShareRoutine = () => {
     if (consultation) {
       setConsultation({
         ...consultation,
-        status: 'routine_shared',
+        status: "routine_shared",
         sharedRoutine: routineItems,
         doctorNotes,
         updatedAt: new Date().toISOString(),
       });
       setShareRoutineDialogOpen(false);
+
+      console.log("Shared Routine:", {
+        ...consultation,
+        status: "routine_shared",
+        sharedRoutine: routineItems,
+        doctorNotes,
+        updatedAt: new Date().toISOString(),
+      });
       // Here you would make an API call to update the consultation
     }
   };
@@ -184,70 +217,384 @@ const RoutinesConsultationDetails: React.FC = () => {
         category: newRoutineItem.category as any,
         title: newRoutineItem.title,
         description: newRoutineItem.description,
-        duration: newRoutineItem.duration || '',
-        frequency: newRoutineItem.frequency || '',
-        instructions: newRoutineItem.instructions || '',
+        duration: newRoutineItem.duration || "",
+        frequency: newRoutineItem.frequency || "",
+        instructions: newRoutineItem.instructions || "",
       };
       setRoutineItems([...routineItems, item]);
       setNewRoutineItem({
-        category: 'exercise',
-        title: '',
-        description: '',
-        duration: '',
-        frequency: '',
-        instructions: '',
+        category: "exercise",
+        title: "",
+        description: "",
+        duration: "",
+        frequency: "",
+        instructions: "",
       });
     }
   };
 
   const removeRoutineItem = (itemId: string) => {
-    setRoutineItems(routineItems.filter(item => item.id !== itemId));
+    setRoutineItems(routineItems.filter((item) => item.id !== itemId));
   };
 
   const getDoshaColor = (dosha: string) => {
     switch (dosha) {
-      case 'vata': return '#9C27B0';
-      case 'pitta': return '#FF9800';
-      case 'kapha': return '#4CAF50';
-      default: return '#757575';
+      case "vata":
+        return "#9C27B0";
+      case "pitta":
+        return "#FF9800";
+      case "kapha":
+        return "#4CAF50";
+      default:
+        return "#757575";
     }
   };
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'exercise': return <FitnessCenter />;
-      case 'diet': return <Restaurant />;
-      case 'lifestyle': return <SelfImprovement />;
-      case 'meditation': return <Spa />;
-      default: return <Assignment />;
+      case "exercise":
+        return <FitnessCenter />;
+      case "diet":
+        return <Restaurant />;
+      case "lifestyle":
+        return <SelfImprovement />;
+      case "meditation":
+        return <Spa />;
+      default:
+        return <Assignment />;
     }
   };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'exercise': return 'primary';
-      case 'diet': return 'success';
-      case 'lifestyle': return 'warning';
-      case 'meditation': return 'secondary';
-      default: return 'default';
+      case "exercise":
+        return "primary";
+      case "diet":
+        return "success";
+      case "lifestyle":
+        return "warning";
+      case "meditation":
+        return "secondary";
+      default:
+        return "default";
     }
   };
 
   const getHealthMetricColor = (value: number, isHighGood: boolean = true) => {
     if (isHighGood) {
-      return value >= 7 ? 'success' : value >= 4 ? 'warning' : 'error';
+      return value >= 7 ? "success" : value >= 4 ? "warning" : "error";
     } else {
-      return value <= 3 ? 'success' : value <= 6 ? 'warning' : 'error';
+      return value <= 3 ? "success" : value <= 6 ? "warning" : "error";
     }
   };
 
-  if (!consultation) {
+  // PDF Generation function
+  const generatePDF = async (responseData: any) => {
+    if (!responseData) {
+      setLoadingPdf(false);
+      return;
+    }
+    setLoadingPdf(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([600, 800]);
+      const { width, height } = page.getSize();
+      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const fontSize = 12;
+      let y = height - 50;
+
+      const drawText = (text: string, bold = false, size = fontSize) => {
+        page.drawText(text, {
+          x: 50,
+          y,
+          size,
+          font: bold ? font : regularFont,
+          color: rgb(0, 0, 0),
+        });
+        y -= size + 5;
+      };
+
+      // Header
+      page.drawText("Ayurvedic Prakriti Analysis", {
+        x: width / 2 - 100,
+        y: height - 30,
+        size: 18,
+        font,
+        color: rgb(0.2, 0.5, 0.4),
+      });
+      page.drawLine({
+        start: { x: 50, y: height - 60 },
+        end: { x: width - 50, y: height - 60 },
+        thickness: 1,
+        color: rgb(0.8, 0.8, 0.8),
+      });
+      y -= 60;
+
+      // Section headers
+      const drawSection = (title: string) => {
+        drawText(title, true, 14);
+        page.drawLine({
+          start: { x: 50, y: y + 5 },
+          end: { x: 150, y: y + 5 },
+          thickness: 1,
+          color: rgb(0.2, 0.5, 0.4),
+        });
+        y -= 10;
+      };
+
+      // Basic Info
+      drawSection("Personal Information");
+      drawText(`Name: ${responseData.Name || responseData.Name || ""}`);
+      drawText(`Age: ${responseData.Age || ""}`);
+      drawText(`Gender: ${responseData.Gender || ""}`);
+      drawText(
+        `Dominant Prakrithi: ${responseData.Dominant_Prakrithi || ""}`,
+        true
+      );
+
+      y -= 15;
+
+      // Body Constituents
+      drawSection("Body Constituents");
+      if (responseData.Body_Constituents) {
+        Object.entries(responseData.Body_Constituents).forEach(
+          ([key, value]) => {
+            drawText(`• ${key.replace(/_/g, " ")}: ${value}`);
+          }
+        );
+      }
+
+      y -= 15;
+
+      // Potential Health Concerns
+      drawSection("Potential Health Considerations");
+      if (responseData.Potential_Health_Concerns?.length === 0) {
+        drawText(`{Subscribe to standard or pro plan}`);
+      } else if (responseData.Potential_Health_Concerns) {
+        responseData.Potential_Health_Concerns.forEach((concern: string) => {
+          drawText(`• ${concern}`);
+        });
+      }
+
+      y -= 15;
+
+      // Recommendations
+      drawSection("Personalized Recommendations");
+
+      // Dietary Guidelines
+      drawText("Dietary Guidelines:", true);
+      if (responseData.Recommendations?.Dietary_Guidelines?.length === 0) {
+        drawText(`{Subscribe to standard or pro plan}`);
+      } else if (responseData.Recommendations?.Dietary_Guidelines) {
+        responseData.Recommendations.Dietary_Guidelines.forEach(
+          (item: string) => {
+            drawText(`  - ${item}`);
+          }
+        );
+      }
+
+      // Lifestyle Suggestions
+      drawText("Lifestyle Suggestions:", true);
+      if (responseData.Recommendations?.Lifestyle_Suggestions?.length === 0) {
+        drawText(`{Subscribe to standard or pro plan}`);
+      } else if (responseData.Recommendations?.Lifestyle_Suggestions) {
+        responseData.Recommendations.Lifestyle_Suggestions.forEach(
+          (item: string) => {
+            drawText(`  - ${item}`);
+          }
+        );
+      }
+
+      // Ayurvedic Herbs & Remedies
+      drawText("Ayurvedic Herbs & Remedies:", true);
+      if (
+        Array.isArray(responseData.Recommendations?.Ayurvedic_Herbs_Remedies) &&
+        responseData.Recommendations.Ayurvedic_Herbs_Remedies.length === 0
+      ) {
+        drawText(`{Subscribe to standard or pro plan}`);
+      } else if (
+        Array.isArray(responseData.Recommendations?.Ayurvedic_Herbs_Remedies)
+      ) {
+        responseData.Recommendations.Ayurvedic_Herbs_Remedies.forEach(
+          (item: string) => {
+            drawText(`  - ${item}`);
+          }
+        );
+      } else if (responseData.Recommendations?.Ayurvedic_Herbs_Remedies) {
+        Object.entries(
+          responseData.Recommendations.Ayurvedic_Herbs_Remedies
+        ).forEach(([key, values]) => {
+          drawText(
+            `  - ${key.replace(/_/g, " ")}: ${(values as string[]).join(", ")}`
+          );
+        });
+      }
+
+      // Footer
+      y -= 30;
+      page.drawText("Thank you for your trust in Ayurveda", {
+        x: width / 2 - 120,
+        y,
+        size: 12,
+        font: regularFont,
+        color: rgb(0.5, 0.5, 0.5),
+      });
+
+      // Save and trigger download
+      const pdfBytes: any = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      setPdf(blob);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    } finally {
+      setLoadingPdf(false);
+    }
+  };
+
+  const generateRoutinePDF = async (
+    routineItems: any[],
+    doctorNotes: string,
+    patientName: string
+  ) => {
+    setLoadingPdf(true);
+    try {
+      const pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([600, 800]);
+      const { width, height } = page.getSize();
+      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      let y = height - 50;
+
+      const drawText = (text: string, bold = false, size = 12, indent = 0) => {
+        page.drawText(text, {
+          x: 50 + indent,
+          y,
+          size,
+          font: bold ? font : regularFont,
+          color: rgb(0, 0, 0),
+        });
+        y -= size + 5;
+      };
+
+      // Header
+      page.drawText("Personalized Ayurvedic Routine", {
+        x: width / 2 - 120,
+        y: height - 30,
+        size: 18,
+        font,
+        color: rgb(0.2, 0.5, 0.4),
+      });
+      page.drawLine({
+        start: { x: 50, y: height - 60 },
+        end: { x: width - 50, y: height - 60 },
+        thickness: 1,
+        color: rgb(0.8, 0.8, 0.8),
+      });
+      y -= 60;
+
+      drawText(`Patient: ${patientName}`, true, 14);
+      y -= 10;
+
+      // Routine Items
+      drawText("Routine Items:", true, 14);
+      y -= 5;
+      routineItems.forEach((item, idx) => {
+        drawText(`${idx + 1}. ${item.title} (${item.category})`, true, 13, 10);
+        drawText(`Description: ${item.description}`, false, 12, 20);
+        drawText(
+          `Duration: ${item.duration} | Frequency: ${item.frequency}`,
+          false,
+          12,
+          20
+        );
+        if (item.instructions) {
+          drawText(`Instructions: ${item.instructions}`, false, 12, 20);
+        }
+        y -= 5;
+      });
+
+      y -= 10;
+      drawText("Doctor's Notes:", true, 14);
+      drawText(doctorNotes || "No additional notes.", false, 12, 10);
+
+      y -= 30;
+      page.drawText("Wishing you health and wellness!", {
+        x: width / 2 - 120,
+        y,
+        size: 12,
+        font: regularFont,
+        color: rgb(0.5, 0.5, 0.5),
+      });
+
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes as any], { type: "application/pdf" });
+      setPdf(blob);
+      return blob;
+    } catch (error) {
+      console.error("Error generating routine PDF:", error);
+      return null;
+    } finally {
+      setLoadingPdf(false);
+    }
+  };
+
+  const submitRoutineResponse = async () => {
+    try {
+      // Generate PDF
+      const pdfBlob = await generateRoutinePDF(
+        routineItems,
+        doctorNotes,
+        patient.name
+      );
+
+      // Use the hook to send to backend
+      await shareRoutineAppointment(consultation._id, pdfBlob as Blob);
+
+      toast.success("Routine shared successfully!");
+      setShareRoutineDialogOpen(false);
+      // Optionally, refetch consultation data here
+    } catch (error) {
+      console.error("Error submitting routine response:", error);
+      // Show error toast
+    }
+  };
+
+  if (loading || consultation === null) {
     return (
       <Container maxWidth="lg" sx={{ py: 3 }}>
         <Typography variant="h6">Loading consultation details...</Typography>
       </Container>
     );
   }
+
+  // Map API data to UI variables
+  const patient = {
+    id: consultation.user._id,
+    name: consultation.user.profile.fullName,
+    age: consultation.user.profile.age,
+    gender: consultation.user.profile.gender,
+    phone: consultation.user.profile.contactNo,
+    email: consultation.user.email,
+    address: consultation.user.profile.address?.clinicAddress || "",
+    avatar: consultation.user.profile.profileImage,
+  };
+
+  const doctor = {
+    id: consultation.doctor._id,
+    name: consultation.doctor.profile.fullName,
+    specialization: Array.isArray(consultation.doctor.profile.specialization)
+      ? consultation.doctor.profile.specialization.join(", ")
+      : consultation.doctor.profile.specialization,
+    experience: consultation.doctor.profile.experience,
+    profileImage: consultation.doctor.profile.profileImage,
+    email: consultation.doctor.email,
+  };
+
+  const appointmentData = consultation.appointmentData;
+  const prakriti = consultation.prakrithiAnalysis;
+  const routineResponse = consultation.routineResponse;
 
   return (
     <Container maxWidth="xl" sx={{ py: 3 }}>
@@ -256,492 +603,312 @@ const RoutinesConsultationDetails: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <IconButton 
-            onClick={() => navigate('/appointments')} 
-            sx={{ mr: 2 }}
-          >
-            <ArrowBack />
-          </IconButton>
-          <Box>
-            <Typography variant="h4" fontWeight="bold" gutterBottom>
-              Routines Consultation Details
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Ayurvedic consultation and personalized routine creation
-            </Typography>
-          </Box>
+        {/* Patient Information Card */}
+        <Box sx={{ flex: { lg: "0 0 30%" } }}>
+          <Card sx={{ mb: 3, position: "sticky", top: 20 }}>
+            <CardContent>
+              <Box sx={{ textAlign: "center", mb: 3 }}>
+                <Avatar
+                  src={patient.avatar}
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    mx: "auto",
+                    mb: 2,
+                    bgcolor: "secondary.main",
+                    fontSize: "2rem",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {patient.name
+                    .split(" ")
+                    .map((n: any) => n[0])
+                    .join("")}
+                </Avatar>
+                <Typography variant="h5" fontWeight="bold" gutterBottom>
+                  {patient.name}
+                </Typography>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  justifyContent="center"
+                  sx={{ mb: 2 }}
+                >
+                  <Chip
+                    label="Routines Consultation"
+                    color="secondary"
+                    size="small"
+                    icon={<Assignment />}
+                  />
+                </Stack>
+              </Box>
+              <Divider sx={{ mb: 3 }} />
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Basic Information
+                </Typography>
+                <Stack spacing={2}>
+                  <Box
+                    sx={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Age:
+                    </Typography>
+                    <Typography variant="body2" fontWeight="medium">
+                      {patient.age} years
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      Gender:
+                    </Typography>
+                    <Typography variant="body2" fontWeight="medium">
+                      {patient.gender}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Box>
+              <Divider sx={{ mb: 3 }} />
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Contact Information
+                </Typography>
+                <Stack spacing={2}>
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
+                      Phone:
+                    </Typography>
+                    <Typography variant="body2" fontWeight="medium">
+                      {patient.phone}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
+                      Email:
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      fontWeight="medium"
+                      sx={{ wordBreak: "break-word" }}
+                    >
+                      {patient.email}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
+                      Address:
+                    </Typography>
+                    <Typography variant="body2" fontWeight="medium">
+                      {patient.address}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Box>
+            </CardContent>
+          </Card>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', lg: 'row' } }}>
-          {/* Patient Information Card */}
-          <Box sx={{ flex: { lg: '0 0 30%' } }}>
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
+        {/* Doctor Information Card */}
+        <Box sx={{ flex: { lg: "0 0 30%" }, mb: 3 }}>
+          <Card>
+            <CardContent>
+              <Box sx={{ textAlign: "center", mb: 2 }}>
+                <Avatar
+                  src={doctor.profileImage}
+                  sx={{
+                    width: 70,
+                    height: 70,
+                    mx: "auto",
+                    mb: 1,
+                    bgcolor: "primary.main",
+                  }}
+                >
+                  {doctor.name
+                    .split(" ")
+                    .map((n: any) => n[0])
+                    .join("")}
+                </Avatar>
+                <Typography variant="h6" fontWeight="bold">
+                  {doctor.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {doctor.specialization}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Experience: {doctor.experience} years
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Email: {doctor.email}
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
+
+        {/* Appointment Data */}
+        <Box sx={{ mb: 3 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Appointment Data
+              </Typography>
+              <Typography variant="body2">
+                Profession: {appointmentData.profession}
+              </Typography>
+              <Typography variant="body2">
+                Health Concerns: {appointmentData.healthConcerns}
+              </Typography>
+              <Typography variant="body2">
+                Work Hours: {appointmentData.workHours}
+              </Typography>
+              <Typography variant="body2">
+                Physical Activity: {appointmentData.physicalActivity}
+              </Typography>
+              <Typography variant="body2">
+                Diet Type: {appointmentData.dietType}
+              </Typography>
+              <Typography variant="body2">
+                Food Preferences: {appointmentData.foodPreferences}
+              </Typography>
+              <Typography variant="body2">
+                Water Intake: {appointmentData.waterIntake}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Box>
+
+        {/* Prakriti Analysis */}
+        <Box sx={{ mb: 3 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Prakriti Analysis
+              </Typography>
+              <Typography variant="body2">
+                Dominant Prakrithi: {prakriti.Dominant_Prakrithi}
+              </Typography>
+              <Typography variant="body2">
+                Body Type: {prakriti.Body_Type}
+              </Typography>
+              <Typography variant="body2">
+                Sleep Pattern: {prakriti.Sleep_Pattern}
+              </Typography>
+              <Typography variant="body2">
+                Potential Health Concerns:
+              </Typography>
+              <ul>
+                {prakriti.Potential_Health_Concerns?.map(
+                  (concern: string, idx: number) => (
+                    <li key={idx}>
+                      <Typography variant="body2">{concern}</Typography>
+                    </li>
+                  )
+                )}
+              </ul>
+              <Typography variant="body2">Recommendations:</Typography>
+              <ul>
+                {prakriti.Recommendations?.Dietary_Guidelines?.map(
+                  (item: string, idx: number) => (
+                    <li key={idx}>
+                      <Typography variant="body2">{item}</Typography>
+                    </li>
+                  )
+                )}
+                {prakriti.Recommendations?.Lifestyle_Suggestions?.map(
+                  (item: string, idx: number) => (
+                    <li key={idx}>
+                      <Typography variant="body2">{item}</Typography>
+                    </li>
+                  )
+                )}
+                {prakriti.Recommendations?.Ayurvedic_Herbs_Remedies?.map(
+                  (item: string, idx: number) => (
+                    <li key={idx}>
+                      <Typography variant="body2">{item}</Typography>
+                    </li>
+                  )
+                )}
+              </ul>
+            </CardContent>
+          </Card>
+        </Box>
+
+        {/* Routine PDF or Share Routine Button */}
+        <Box sx={{ mb: 3 }}>
+          {routineResponse.pdfUrl ? (
+            <Button
+              variant="contained"
+              color="success"
+              href={routineResponse.pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              <Card sx={{ mb: 3, position: 'sticky', top: 20 }}>
-                <CardContent>
-                  <Box sx={{ textAlign: 'center', mb: 3 }}>
-                    <Avatar 
-                      sx={{ 
-                        width: 80, 
-                        height: 80, 
-                        mx: 'auto', 
-                        mb: 2,
-                        bgcolor: 'secondary.main',
-                        fontSize: '2rem',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {consultation.patient.name.split(' ').map(n => n[0]).join('')}
-                    </Avatar>
-                    <Typography variant="h5" fontWeight="bold" gutterBottom>
-                      {consultation.patient.name}
-                    </Typography>
-                    <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 2 }}>
-                      <Chip 
-                        label="Routines Consultation"
-                        color="secondary"
-                        size="small"
-                        icon={<Assignment />}
-                      />
-                    </Stack>
-                  </Box>
-
-                  <Divider sx={{ mb: 3 }} />
-
-                  {/* Basic Information */}
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Person fontSize="small" />
-                      Basic Information
-                    </Typography>
-                    <Stack spacing={2}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography variant="body2" color="text.secondary">Age:</Typography>
-                        <Typography variant="body2" fontWeight="medium">{consultation.patient.age} years</Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography variant="body2" color="text.secondary">Gender:</Typography>
-                        <Typography variant="body2" fontWeight="medium">{consultation.patient.gender}</Typography>
-                      </Box>
-                    </Stack>
-                  </Box>
-
-                  <Divider sx={{ mb: 3 }} />
-
-                  {/* Contact Information */}
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Phone fontSize="small" />
-                      Contact Information
-                    </Typography>
-                    <Stack spacing={2}>
-                      <Box>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>Phone:</Typography>
-                        <Typography variant="body2" fontWeight="medium">{consultation.patient.phone}</Typography>
-                      </Box>
-                      <Box>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>Email:</Typography>
-                        <Typography variant="body2" fontWeight="medium" sx={{ wordBreak: 'break-word' }}>
-                          {consultation.patient.email}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  </Box>
-
-                  {/* Prakriti Analysis */}
-                  <Divider sx={{ mb: 3 }} />
-                  <Box>
-                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Psychology fontSize="small" />
-                      Prakriti Analysis
-                    </Typography>
-                    
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Dominant Dosha: <Typography 
-                          component="span" 
-                          fontWeight="bold" 
-                          sx={{ color: getDoshaColor(consultation.prakritiData.dominantDosha) }}
-                        >
-                          {consultation.prakritiData.dominantDosha.charAt(0).toUpperCase() + consultation.prakritiData.dominantDosha.slice(1)}
-                        </Typography>
-                      </Typography>
-                    </Box>
-
-                    <Stack spacing={2}>
-                      {/* Vata */}
-                      <Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                          <Typography variant="body2">Vata</Typography>
-                          <Typography variant="body2" fontWeight="bold">{consultation.prakritiData.vata}%</Typography>
-                        </Box>
-                        <LinearProgress 
-                          variant="determinate" 
-                          value={consultation.prakritiData.vata} 
-                          sx={{ 
-                            height: 6, 
-                            borderRadius: 3,
-                            '& .MuiLinearProgress-bar': {
-                              backgroundColor: getDoshaColor('vata'),
-                            },
-                          }}
-                        />
-                      </Box>
-
-                      {/* Pitta */}
-                      <Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                          <Typography variant="body2">Pitta</Typography>
-                          <Typography variant="body2" fontWeight="bold">{consultation.prakritiData.pitta}%</Typography>
-                        </Box>
-                        <LinearProgress 
-                          variant="determinate" 
-                          value={consultation.prakritiData.pitta} 
-                          sx={{ 
-                            height: 6, 
-                            borderRadius: 3,
-                            '& .MuiLinearProgress-bar': {
-                              backgroundColor: getDoshaColor('pitta'),
-                            },
-                          }}
-                        />
-                      </Box>
-
-                      {/* Kapha */}
-                      <Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                          <Typography variant="body2">Kapha</Typography>
-                          <Typography variant="body2" fontWeight="bold">{consultation.prakritiData.kapha}%</Typography>
-                        </Box>
-                        <LinearProgress 
-                          variant="determinate" 
-                          value={consultation.prakritiData.kapha} 
-                          sx={{ 
-                            height: 6, 
-                            borderRadius: 3,
-                            '& .MuiLinearProgress-bar': {
-                              backgroundColor: getDoshaColor('kapha'),
-                            },
-                          }}
-                        />
-                      </Box>
-                    </Stack>
-
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                      Assessment Date: {dayjs(consultation.prakritiData.assessmentDate).format('MMM DD, YYYY')}
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </Box>
-
-          {/* Consultation Details */}
-          <Box sx={{ flex: 1 }}>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
+              Download Routine PDF
+            </Button>
+          ) : (
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<Share />}
+              onClick={() => setShareRoutineDialogOpen(true)}
             >
-              {/* Health Metrics */}
-              <Card sx={{ mb: 3 }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <LocalHospital fontSize="small" />
-                    Health Metrics & Assessment
-                  </Typography>
-                  
-                  <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CalendarToday fontSize="small" color="action" />
-                      <Typography variant="body2">
-                        <strong>Date:</strong> {dayjs(consultation.date).format('MMMM DD, YYYY')}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <AccessTime fontSize="small" color="action" />
-                      <Typography variant="body2">
-                        <strong>Time:</strong> {consultation.time}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Divider sx={{ mb: 3 }} />
-
-                  {/* Physical Metrics */}
-                  <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 2, mb: 3 }}>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
-                      <Typography variant="h6" color="primary" fontWeight="bold">
-                        {consultation.healthMetrics.bmi}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">BMI</Typography>
-                    </Paper>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
-                      <Typography variant="h6" color="success.main" fontWeight="bold">
-                        {consultation.healthMetrics.bloodPressure}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">Blood Pressure</Typography>
-                    </Paper>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
-                      <Typography variant="h6" color="info.main" fontWeight="bold">
-                        {consultation.healthMetrics.heartRate}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">Heart Rate</Typography>
-                    </Paper>
-                  </Box>
-
-                  {/* Wellness Metrics */}
-                  <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                    Wellness Assessment (1-10 Scale)
-                  </Typography>
-                  <Stack spacing={2}>
-                    <Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                        <Typography variant="body2">Sleep Quality</Typography>
-                        <Chip 
-                          label={consultation.healthMetrics.sleepQuality} 
-                          size="small" 
-                          color={getHealthMetricColor(consultation.healthMetrics.sleepQuality) as any}
-                        />
-                      </Box>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={consultation.healthMetrics.sleepQuality * 10} 
-                        color={getHealthMetricColor(consultation.healthMetrics.sleepQuality) as any}
-                        sx={{ height: 6, borderRadius: 3 }}
-                      />
-                    </Box>
-
-                    <Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                        <Typography variant="body2">Stress Level</Typography>
-                        <Chip 
-                          label={consultation.healthMetrics.stressLevel} 
-                          size="small" 
-                          color={getHealthMetricColor(consultation.healthMetrics.stressLevel, false) as any}
-                        />
-                      </Box>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={consultation.healthMetrics.stressLevel * 10} 
-                        color={getHealthMetricColor(consultation.healthMetrics.stressLevel, false) as any}
-                        sx={{ height: 6, borderRadius: 3 }}
-                      />
-                    </Box>
-
-                    <Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                        <Typography variant="body2">Energy Level</Typography>
-                        <Chip 
-                          label={consultation.healthMetrics.energyLevel} 
-                          size="small" 
-                          color={getHealthMetricColor(consultation.healthMetrics.energyLevel) as any}
-                        />
-                      </Box>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={consultation.healthMetrics.energyLevel * 10} 
-                        color={getHealthMetricColor(consultation.healthMetrics.energyLevel) as any}
-                        sx={{ height: 6, borderRadius: 3 }}
-                      />
-                    </Box>
-                  </Stack>
-                </CardContent>
-              </Card>
-
-              {/* Goals and Concerns */}
-              <Card sx={{ mb: 3 }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Patient Goals & Concerns
-                  </Typography>
-                  
-                  <Accordion>
-                    <AccordionSummary expandIcon={<ExpandMore />}>
-                      <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <SelfImprovement fontSize="small" />
-                        Health Goals ({consultation.goals.length})
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        {consultation.goals.map((goal, index) => (
-                          <Chip 
-                            key={index} 
-                            label={goal} 
-                            color="success" 
-                            variant="outlined"
-                            size="small"
-                          />
-                        ))}
-                      </Box>
-                    </AccordionDetails>
-                  </Accordion>
-
-                  <Accordion>
-                    <AccordionSummary expandIcon={<ExpandMore />}>
-                      <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Warning fontSize="small" />
-                        Health Concerns ({consultation.concerns.length})
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        {consultation.concerns.map((concern, index) => (
-                          <Chip 
-                            key={index} 
-                            label={concern} 
-                            color="warning" 
-                            variant="outlined"
-                            size="small"
-                          />
-                        ))}
-                      </Box>
-                    </AccordionDetails>
-                  </Accordion>
-
-                  <Accordion>
-                    <AccordionSummary expandIcon={<ExpandMore />}>
-                      <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Info fontSize="small" />
-                        Patient Notes
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
-                        <Typography variant="body2">
-                          {consultation.notes}
-                        </Typography>
-                      </Paper>
-                    </AccordionDetails>
-                  </Accordion>
-                </CardContent>
-              </Card>
-
-              {/* Shared Routine */}
-              {consultation.sharedRoutine && consultation.sharedRoutine.length > 0 && (
-                <Card sx={{ mb: 3 }}>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Share fontSize="small" />
-                      Shared Routine
-                    </Typography>
-                    
-                    <Alert severity="success" sx={{ mb: 3 }}>
-                      Personalized routine has been shared with the patient on {dayjs(consultation.updatedAt).format('MMMM DD, YYYY [at] h:mm A')}
-                    </Alert>
-
-                    <Stack spacing={2}>
-                      {consultation.sharedRoutine.map((item) => (
-                        <Card key={item.id} variant="outlined">
-                          <CardContent sx={{ p: 2 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                              <Chip 
-                                icon={getCategoryIcon(item.category)}
-                                label={item.category.charAt(0).toUpperCase() + item.category.slice(1)}
-                                color={getCategoryColor(item.category) as any}
-                                size="small"
-                              />
-                              <Typography variant="h6" fontWeight="bold">
-                                {item.title}
-                              </Typography>
-                            </Box>
-                            
-                            <Typography variant="body2" color="text.secondary" paragraph>
-                              {item.description}
-                            </Typography>
-                            
-                            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                              <Typography variant="body2">
-                                <strong>Duration:</strong> {item.duration}
-                              </Typography>
-                              <Typography variant="body2">
-                                <strong>Frequency:</strong> {item.frequency}
-                              </Typography>
-                            </Box>
-                            
-                            {item.instructions && (
-                              <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
-                                <Typography variant="body2">
-                                  <strong>Instructions:</strong> {item.instructions}
-                                </Typography>
-                              </Paper>
-                            )}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </Stack>
-
-                    {consultation.doctorNotes && (
-                      <Box sx={{ mt: 3 }}>
-                        <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                          Doctor's Notes
-                        </Typography>
-                        <Paper sx={{ p: 2, bgcolor: 'info.50' }}>
-                          <Typography variant="body2">
-                            {consultation.doctorNotes}
-                          </Typography>
-                        </Paper>
-                      </Box>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Action Button */}
-              {consultation.status === 'pending' && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', pt: 3 }}>
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    size="large"
-                    startIcon={<Share />}
-                    onClick={() => setShareRoutineDialogOpen(true)}
-                    sx={{ px: 4 }}
-                  >
-                    Share Personalized Routine
-                  </Button>
-                </Box>
-              )}
-            </motion.div>
-          </Box>
+              Share Routine
+            </Button>
+          )}
         </Box>
 
         {/* Share Routine Dialog */}
-        <Dialog 
-          open={shareRoutineDialogOpen} 
-          onClose={() => setShareRoutineDialogOpen(false)} 
-          maxWidth="md" 
+        <Dialog
+          open={shareRoutineDialogOpen}
+          onClose={() => setShareRoutineDialogOpen(false)}
+          maxWidth="md"
           fullWidth
         >
-          <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Share color="secondary" />
             Create & Share Personalized Routine
           </DialogTitle>
           <DialogContent>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Create a personalized Ayurvedic routine based on the patient's Prakriti analysis and health goals.
+              Create a personalized Ayurvedic routine based on the patient's
+              Prakriti analysis and health goals.
             </Typography>
 
             {/* Add New Routine Item */}
             <Card variant="outlined" sx={{ mb: 3, p: 2 }}>
-              <Typography variant="h6" gutterBottom>Add Routine Item</Typography>
-              
+              <Typography variant="h6" gutterBottom>
+                Add Routine Item
+              </Typography>
+
               <Stack spacing={2}>
-                <Box sx={{ display: 'flex', gap: 2 }}>
+                <Box sx={{ display: "flex", gap: 2 }}>
                   <TextField
                     select
                     label="Category"
                     value={newRoutineItem.category}
-                    onChange={(e) => setNewRoutineItem({...newRoutineItem, category: e.target.value as any})}
+                    onChange={(e) =>
+                      setNewRoutineItem({
+                        ...newRoutineItem,
+                        category: e.target.value as any,
+                      })
+                    }
                     sx={{ minWidth: 150 }}
                     SelectProps={{
-                      'aria-label': 'Select routine category'
+                      "aria-label": "Select routine category",
                     }}
                   >
                     <MenuItem value="exercise">Exercise</MenuItem>
@@ -749,56 +916,83 @@ const RoutinesConsultationDetails: React.FC = () => {
                     <MenuItem value="lifestyle">Lifestyle</MenuItem>
                     <MenuItem value="meditation">Meditation</MenuItem>
                   </TextField>
-                  
+
                   <TextField
                     label="Title"
                     value={newRoutineItem.title}
-                    onChange={(e) => setNewRoutineItem({...newRoutineItem, title: e.target.value})}
+                    onChange={(e) =>
+                      setNewRoutineItem({
+                        ...newRoutineItem,
+                        title: e.target.value,
+                      })
+                    }
                     fullWidth
                   />
                 </Box>
-                
+
                 <TextField
                   label="Description"
                   multiline
                   rows={2}
                   value={newRoutineItem.description}
-                  onChange={(e) => setNewRoutineItem({...newRoutineItem, description: e.target.value})}
+                  onChange={(e) =>
+                    setNewRoutineItem({
+                      ...newRoutineItem,
+                      description: e.target.value,
+                    })
+                  }
                   fullWidth
                 />
-                
-                <Box sx={{ display: 'flex', gap: 2 }}>
+
+                <Box sx={{ display: "flex", gap: 2 }}>
                   <TextField
                     label="Duration"
                     value={newRoutineItem.duration}
-                    onChange={(e) => setNewRoutineItem({...newRoutineItem, duration: e.target.value})}
+                    onChange={(e) =>
+                      setNewRoutineItem({
+                        ...newRoutineItem,
+                        duration: e.target.value,
+                      })
+                    }
                     placeholder="e.g., 30 minutes"
                     fullWidth
                   />
                   <TextField
                     label="Frequency"
                     value={newRoutineItem.frequency}
-                    onChange={(e) => setNewRoutineItem({...newRoutineItem, frequency: e.target.value})}
+                    onChange={(e) =>
+                      setNewRoutineItem({
+                        ...newRoutineItem,
+                        frequency: e.target.value,
+                      })
+                    }
                     placeholder="e.g., Daily, 3x per week"
                     fullWidth
                   />
                 </Box>
-                
+
                 <TextField
                   label="Instructions"
                   multiline
                   rows={2}
                   value={newRoutineItem.instructions}
-                  onChange={(e) => setNewRoutineItem({...newRoutineItem, instructions: e.target.value})}
+                  onChange={(e) =>
+                    setNewRoutineItem({
+                      ...newRoutineItem,
+                      instructions: e.target.value,
+                    })
+                  }
                   placeholder="Detailed instructions for the patient"
                   fullWidth
                 />
-                
+
                 <Button
                   variant="outlined"
                   startIcon={<Add />}
                   onClick={addRoutineItem}
-                  disabled={!newRoutineItem.title || !newRoutineItem.description}
+                  disabled={
+                    !newRoutineItem.title || !newRoutineItem.description
+                  }
                 >
                   Add Item
                 </Button>
@@ -815,9 +1009,22 @@ const RoutinesConsultationDetails: React.FC = () => {
                   {routineItems.map((item) => (
                     <Card key={item.id} variant="outlined">
                       <CardContent sx={{ p: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Chip 
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            mb: 2,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 2,
+                            }}
+                          >
+                            <Chip
                               icon={getCategoryIcon(item.category)}
                               label={item.category}
                               color={getCategoryColor(item.category) as any}
@@ -827,20 +1034,24 @@ const RoutinesConsultationDetails: React.FC = () => {
                               {item.title}
                             </Typography>
                           </Box>
-                          <IconButton 
-                            size="small" 
+                          <IconButton
+                            size="small"
                             color="error"
                             onClick={() => removeRoutineItem(item.id)}
                           >
                             <Delete />
                           </IconButton>
                         </Box>
-                        
-                        <Typography variant="body2" color="text.secondary" paragraph>
+
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          paragraph
+                        >
                           {item.description}
                         </Typography>
-                        
-                        <Box sx={{ display: 'flex', gap: 2 }}>
+
+                        <Box sx={{ display: "flex", gap: 2 }}>
                           <Typography variant="body2">
                             <strong>Duration:</strong> {item.duration}
                           </Typography>
@@ -870,20 +1081,50 @@ const RoutinesConsultationDetails: React.FC = () => {
             <Button onClick={() => setShareRoutineDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleShareRoutine} 
-              variant="contained" 
+            <Button
+              onClick={submitRoutineResponse}
+              variant="contained"
               color="secondary"
               startIcon={<Share />}
               disabled={routineItems.length === 0}
             >
-              Share Routine
+              {!submit ? "Share Routine" : "Sharing..."}
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Add this button wherever you want to trigger PDF generation for prakriti analysis */}
+        <Box sx={{ mb: 2 }}>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => generatePDF(consultation.prakrithiAnalysis)}
+            disabled={loadingPdf}
+          >
+            {loadingPdf ? "Generating PDF..." : "View Prakriti Analysis PDF"}
+          </Button>
+          {pdf && (
+            <Button
+              variant="contained"
+              color="success"
+              sx={{ ml: 2 }}
+              onClick={() => {
+                const url = URL.createObjectURL(pdf);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = "Prakriti_Analysis.pdf";
+                link.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              Download PDF
+            </Button>
+          )}
+        </Box>
       </motion.div>
     </Container>
   );
 };
 
 export default RoutinesConsultationDetails;
+

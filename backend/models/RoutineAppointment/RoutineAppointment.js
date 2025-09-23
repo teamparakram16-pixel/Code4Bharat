@@ -71,7 +71,7 @@ const RoutineAppointmentSchema = new mongoose.Schema(
     },
     prakrithiAnalysis: {
       type: Schema.Types.ObjectId,
-      ref: "Prakriti",
+      ref: "Prakrithi",
       required: true,
     },
     routineResponse: {

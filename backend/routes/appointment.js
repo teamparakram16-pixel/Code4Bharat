@@ -44,7 +44,7 @@ router.patch(
   "/routine/:id/response",
   checkExpertLogin,
   handleRoutineResponseDiskUpload,
-  checkRoutineAppointmentDoctorAuth, // <-- Place before file upload
+  wrapAsync(checkRoutineAppointmentDoctorAuth), // <-- Place before file upload
   wrapAsync(handleRoutineResponseCloudinaryUpload),
   wrapAsync(routineResponseController)
 );

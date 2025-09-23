@@ -6,8 +6,6 @@ import RoutineAppointment from "../models/RoutineAppointment/RoutineAppointment.
 import ExpressError from "../utils/expressError.js";
 import Expert from "../models/Expert/Expert.js";
 
-
-
 const nanoid = customAlphabet(
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
   10
@@ -20,7 +18,9 @@ export const createAppointment = wrapAsync(async (req, res) => {
 
   // Validate date & time
   if (!appointmentDate || !appointmentTime) {
-    return res.status(400).json({ message: "Appointment date and time are required." });
+    return res
+      .status(400)
+      .json({ message: "Appointment date and time are required." });
   }
 
   const datePart = new Date(appointmentDate); // YYYY-MM-DD
@@ -34,7 +34,9 @@ export const createAppointment = wrapAsync(async (req, res) => {
   datePart.setHours(parseInt(timePart[0]), parseInt(timePart[1]), 0, 0);
 
   if (datePart < new Date()) {
-    return res.status(400).json({ message: "Appointment must be in the future." });
+    return res
+      .status(400)
+      .json({ message: "Appointment must be in the future." });
   }
 
   // Check Prakriti exists
@@ -76,7 +78,6 @@ export const createAppointment = wrapAsync(async (req, res) => {
     appointment,
   });
 });
-
 
 // Get all appointments of logged-in user
 export const getUserAppointments = wrapAsync(async (req, res) => {
@@ -233,10 +234,17 @@ export const getRoutineAppointmentById = async (req, res) => {
     .populate("prakrithiAnalysis");
 
   if (!appointment) {
-    return res.status(404).json({ message: "Routine appointment not found." });
+    throw new ExpressError(404, "Routine appointment not found.");
   }
 
-  res.status(200).json({ appointment });
+  // Convert Mongoose document to plain object
+  const appointmentObj = appointment.toObject();
+
+  // Rename userId and doctorId to user and doctor
+  appointmentObj.user = appointmentObj.userId;
+  delete appointmentObj.userId;
+  appointmentObj.doctor = appointmentObj.doctorId;
+  delete appointmentObj.doctorId;
+
+  res.status(200).json({ routineAppointment: appointmentObj });
 };
-
-
