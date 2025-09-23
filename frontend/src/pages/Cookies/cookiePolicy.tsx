@@ -622,13 +622,22 @@ const CookiePolicy: React.FC = () => {
         <Divider sx={{ mb: 3 }} />
 
         <Box>
-          <div
-            dangerouslySetInnerHTML={{
-              __html: `<script id="CookieDeclaration" src="https://consent.cookiebot.com/${
-                import.meta.env.VITE_COOKIEBOT_ID
-              }/cd.js" type="text/javascript" async></script>`,
-            }}
-          />
+          {/* Only load CookieDeclaration in production */}
+          {window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && (
+            <div
+              dangerouslySetInnerHTML={{
+                __html: `<script id="CookieDeclaration" src="https://consent.cookiebot.com/${
+                  import.meta.env.VITE_COOKIEBOT_ID
+                }/cd.js" type="text/javascript" async></script>`,
+              }}
+            />
+          )}
+          {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+            <div style={{ padding: '20px', background: '#f5f5f5', borderRadius: '8px' }}>
+              <p><strong>Development Mode:</strong> Cookie policy declaration is disabled in development environment.</p>
+              <p>This will be enabled automatically in production.</p>
+            </div>
+          )}
         </Box>
       </Box>
     </Box>
