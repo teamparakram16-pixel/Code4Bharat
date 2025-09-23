@@ -4,25 +4,55 @@ import {
   getExpertAppointments,
   getAppointmentByMeetId,
   createAppointment,
-  updateAppointmentStatus,
+  updateAppointmentStatusViaEmail,
+  routineResponseController,
+  verifyMeetLink
 } from "../controllers/appointment.js";
-
-
+import { createRoutineAppointment } from "../controllers/appointment.js";
+import { validateMedicalRoutineAppointment } from "../middlewares/validationMiddleware/validationMiddlewares.js";
+import { checkPrakrithiAnalysisExists } from "../middlewares/checkPrakrithiAnalysisExists.js";
+import wrapAsync from "../utils/wrapAsync.js";
+import { checkUserLogin } from "../middlewares/users/auth.js";
+import { checkRoutineAppointmentDoctorAuth } from "../middlewares/appointMentMiddlewares/appointMentMiddlewares.js";
+import { handleRoutineResponseCloudinaryUpload } from "../middlewares/cloudinary/handleRoutineResponse/handleRoutineResponseCloudinaryUpload.js";
+import { handleRoutineResponseDiskUpload } from "../middlewares/cloudinary/handleRoutineResponse/handleRoutineResponseDiskUpload.js";
+import { checkExpertLogin } from "../middlewares/experts/auth.js";
 const router = express.Router();
 
 // Create appointment
-router.post("/", createAppointment);
+router.post("/",checkUserLogin,checkPrakrithiAnalysisExists, createAppointment);
+
+// Create routine appointment (with validation and Prakrithi analysis check)
+router.post(
+  "/routine",
+  checkUserLogin,
+  validateMedicalRoutineAppointment,
+  checkPrakrithiAnalysisExists,
+  wrapAsync(createRoutineAppointment)
+);
+
+// Doctor's response to routine appointment
+router.patch(
+  "/routine/:id/response",
+  checkUserLogin,
+  handleRoutineResponseDiskUpload,
+  checkRoutineAppointmentDoctorAuth, // <-- Place before file upload
+  wrapAsync(handleRoutineResponseCloudinaryUpload),
+  wrapAsync(routineResponseController)
+);
 
 // Get all appointments for logged-in user
-router.get("/consulations/user",  getUserAppointments);
+router.get("/consulations/user",checkUserLogin, getUserAppointments);
 
 // Get all appointments for logged-in doctor/expert
-router.get("/consultations/expert",  getExpertAppointments);
+router.get("/consultations/expert",checkExpertLogin,getExpertAppointments);
 
 // Get single appointment by meetId (link check included)
-router.get("/consultation/:meetId",  getAppointmentByMeetId);
+router.get("/consultation/:meetId", getAppointmentByMeetId);
 
 // Update appointment status (accept/reject)
-router.patch("/consultation/:appointmentId/status",  updateAppointmentStatus);
+router.patch("/consultation/:appointmentId/status", updateAppointmentStatusViaEmail);
+
+router.get("/verify/:meetId", verifyMeetLink)
 
 export default router;

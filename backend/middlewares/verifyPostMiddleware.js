@@ -26,13 +26,15 @@ export const verifyPostData = async (req, res, next) => {
     // Two Step verifcation - first Azure for Violence Check and second is gemini
 
     // Step 1 : Azure Sevices:
-    const response = await axiosInstance.post("/contentsafety/text:analyze?api-version=2024-09-01", 
-      {text : combinedText }
+    const response = await axiosInstance.post("/contentsafety/text:analyze?api-version=2024-09-01",
+      { text: combinedText }
     );
 
     const categories = response.data.categoriesAnalysis || [];
 
-    const filteredcategories = categories.filter((c) => c.severity >= 2)
+
+    const filteredcategories = categories.filter((c) => c.severity >= 1)
+
 
     if (filteredcategories.length > 0) {
       throw new ExpressError(400, "Your text has violent or harmful content ! Consider revising it ...");
@@ -84,17 +86,15 @@ export const verifyPostData = async (req, res, next) => {
           filename: fileName,
           contentType: mimetype,
         });
-        const response = await axios
-          .post(
-            "https://pranavpai0309-pdf-parser.hf.space/PDF_Parser",
-            formData,
-            {
-              headers: formData.getHeaders(), // Important for setting correct Content-Type boundary
-            }
-          )
-          .catch((err) => {
-            console.log("Error occurred in pdf parser : ", err);
+        try {
+          const response = await axios.post(process.env.PDF_PARSER, formData, {
+            headers: formData.getHeaders(),
           });
+
+        } catch (err) {
+          console.error("Error occurred in pdf parser :", err.message);
+          throw new ExpressError(500, "Failed to parse the uploaded PDF.");
+        }
 
 
 

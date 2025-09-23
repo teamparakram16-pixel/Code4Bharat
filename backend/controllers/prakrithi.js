@@ -40,8 +40,8 @@ export const getPrakritiStatus = async (req, res, next) => {
   const premiumStartDate =
     activePremium && activePremium.validTill
       ? new Date(
-          activePremium.validTill.getTime() - durationDays * 24 * 60 * 60 * 1000
-        )
+        activePremium.validTill.getTime() - durationDays * 24 * 60 * 60 * 1000
+      )
       : null;
 
   // Count how many Prakriti analyses done today
@@ -151,6 +151,7 @@ const findPrakrithi = async (req, res) => {
     { new: true, upsert: true, runValidators: true }
   );
 
+  
   // Update the User document to keep reference to latest PrakritiAnalysis
   await User.findByIdAndUpdate(userId, {
     prakritiAnalysis: {

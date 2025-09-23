@@ -50,20 +50,39 @@ export default function LiveStreaming() {
   const getPermissions = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: videoEnabled,
-        audio: true,
+        video: videoEnabled ? {
+          width: { ideal: 1920, max: 1920 },
+          height: { ideal: 1080, max: 1080 },
+          frameRate: { ideal: 30, max: 60 },
+          facingMode: 'user',
+          aspectRatio: { ideal: 16/9 }
+        } : false,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 48000,
+          channelCount: 2
+        },
       });
       window.localStream = stream;
       if (localVideoRef.current && videoEnabled) {
         localVideoRef.current.srcObject = stream;
+        localVideoRef.current.play().catch(console.error);
       }
     } catch (e) {
       console.error("Permissions error:", e);
-      // If video fails, try audio only
+      // If video fails, try audio only with high quality settings
       try {
         const audioOnlyStream = await navigator.mediaDevices.getUserMedia({
           video: false,
-          audio: true,
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleRate: 48000,
+            channelCount: 2
+          },
         });
         window.localStream = audioOnlyStream;
         setVideoEnabled(false);
@@ -101,10 +120,16 @@ export default function LiveStreaming() {
       }
       setVideoEnabled(false);
     } else {
-      // Turn on video - request camera access
+      // Turn on video - request camera access with high quality settings
       try {
         const videoStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+          video: {
+            width: { ideal: 1920, max: 1920 },
+            height: { ideal: 1080, max: 1080 },
+            frameRate: { ideal: 30, max: 60 },
+            facingMode: 'user',
+            aspectRatio: { ideal: 16/9 }
+          },
           audio: false
         });
         
@@ -117,9 +142,14 @@ export default function LiveStreaming() {
           window.localStream = videoStream;
         }
         
-        // Update video element
+        // Update video element with improved settings
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = window.localStream;
+          localVideoRef.current.play().catch(console.error);
+          // Ensure proper video rendering
+          localVideoRef.current.onloadedmetadata = () => {
+            localVideoRef.current?.play().catch(console.error);
+          };
         }
         
         // Add video track to peer connections
@@ -131,7 +161,7 @@ export default function LiveStreaming() {
       } catch (error) {
         console.error("Error accessing camera:", error);
         // Handle permission denied or camera not available
-        alert("Unable to access camera. Please check your camera permissions.");
+        alert("Unable to access camera. Please check your camera permissions and ensure no other application is using the camera.");
       }
     }
   };
@@ -156,6 +186,7 @@ export default function LiveStreaming() {
     const pc = new RTCPeerConnection(ICE_SERVERS);
     connections.current[id] = pc;
 
+    // Enhanced connection event handlers
     pc.onicecandidate = (e) => {
       if (e.candidate && socketRef.current) {
         socketRef.current.emit("signal", id, JSON.stringify({ ice: e.candidate }));
@@ -163,6 +194,7 @@ export default function LiveStreaming() {
     };
 
     pc.ontrack = (event) => {
+      console.log(`Received track from ${id}:`, event.track.kind);
       const stream = event.streams[0];
       setVideos((prev) => {
         const exists = prev.find((v) => v.socketId === id);
@@ -175,15 +207,54 @@ export default function LiveStreaming() {
       });
     };
 
+    // Connection state monitoring
+    pc.onconnectionstatechange = () => {
+      console.log(`Connection state with ${id}:`, pc.connectionState);
+      if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+        console.warn(`Connection with ${id} failed, attempting to reconnect...`);
+        // Could implement reconnection logic here
+      }
+    };
+
+    pc.oniceconnectionstatechange = () => {
+      console.log(`ICE connection state with ${id}:`, pc.iceConnectionState);
+    };
+
+    // Add local tracks with enhanced error handling
     if (window.localStream) {
-      window.localStream.getTracks().forEach((track) =>
-        pc.addTrack(track, window.localStream as MediaStream)
-      );
+      window.localStream.getTracks().forEach((track) => {
+        try {
+          const sender = pc.addTrack(track, window.localStream as MediaStream);
+          console.log(`Added ${track.kind} track to peer ${id}`);
+          
+          // Configure encoding for better quality
+          if (track.kind === 'video') {
+            const params = sender.getParameters();
+            if (params.encodings && params.encodings.length > 0) {
+              params.encodings[0].maxBitrate = 2000000; // 2 Mbps
+              params.encodings[0].maxFramerate = 30;
+              sender.setParameters(params).catch(console.error);
+            }
+          }
+        } catch (error) {
+          console.error(`Error adding ${track.kind} track:`, error);
+        }
+      });
     }
 
     if (isOffer) {
-      pc.createOffer()
-        .then((desc) => pc.setLocalDescription(desc))
+      // Enhanced offer creation with better codec preferences
+      pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      })
+        .then((desc) => {
+          // Prefer VP9 codec for better quality if available
+          if (desc.sdp) {
+            desc.sdp = desc.sdp.replace(/VP8/g, 'VP9');
+          }
+          return pc.setLocalDescription(desc);
+        })
         .then(() => {
           if (socketRef.current) {
             socketRef.current.emit(
@@ -192,6 +263,9 @@ export default function LiveStreaming() {
               JSON.stringify({ sdp: pc.localDescription })
             );
           }
+        })
+        .catch(error => {
+          console.error(`Error creating offer for ${id}:`, error);
         });
     }
   };
@@ -199,35 +273,71 @@ export default function LiveStreaming() {
   const toggleScreenShare = async () => {
     if (!screenSharing) {
       try {
+        // Enhanced screen sharing with audio capture option
         const screenStream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
+          video: {
+            width: { ideal: 1920, max: 4096 },
+            height: { ideal: 1080, max: 2160 },
+            frameRate: { ideal: 30, max: 60 }
+          },
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+            sampleRate: 48000
+          }
         });
+        
         screenStreamRef.current = screenStream;
-
         const screenTrack = screenStream.getVideoTracks()[0];
 
+        // Replace video track in all peer connections
         Object.values(connections.current).forEach((pc) => {
           const sender = pc.getSenders().find((s) => s.track?.kind === "video");
           if (sender) {
             // Replace existing video track with screen share
-            sender.replaceTrack(screenTrack);
+            sender.replaceTrack(screenTrack).catch(console.error);
           } else {
             // Add screen share track if no video track exists
             pc.addTrack(screenTrack, screenStream);
           }
         });
 
+        // Update local video to show screen share
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = screenStream;
+          localVideoRef.current.play().catch(console.error);
         }
 
+        // Handle screen share end (user clicks stop sharing in browser)
         screenTrack.onended = () => {
           stopScreenShare();
         };
 
+        // Handle audio track if available
+        const audioTracks = screenStream.getAudioTracks();
+        if (audioTracks.length > 0) {
+          const audioTrack = audioTracks[0];
+          Object.values(connections.current).forEach((pc) => {
+            pc.addTrack(audioTrack, screenStream);
+          });
+          
+          audioTrack.onended = () => {
+            stopScreenShare();
+          };
+        }
+
         setScreenSharing(true);
       } catch (err) {
         console.error("Screen share error:", err);
+        const error = err as Error;
+        if (error.name === 'NotAllowedError') {
+          alert('Screen sharing permission was denied. Please allow screen sharing to continue.');
+        } else if (error.name === 'NotFoundError') {
+          alert('No screen available for sharing.');
+        } else {
+          alert('Error starting screen share. Please try again.');
+        }
       }
     } else {
       stopScreenShare();
@@ -237,29 +347,45 @@ export default function LiveStreaming() {
   const stopScreenShare = () => {
     if (!screenStreamRef.current) return;
 
-    // Stop screen sharing tracks
-    screenStreamRef.current.getTracks().forEach((t) => t.stop());
+    // Stop all screen sharing tracks (video and audio)
+    screenStreamRef.current.getTracks().forEach((track) => {
+      track.stop();
+      console.log(`Stopped ${track.kind} track for screen sharing`);
+    });
+    
+    // Remove screen share audio tracks from peer connections
+    Object.values(connections.current).forEach((pc) => {
+      pc.getSenders().forEach((sender) => {
+        if (sender.track && screenStreamRef.current?.getTracks().includes(sender.track)) {
+          pc.removeTrack(sender);
+        }
+      });
+    });
+    
     screenStreamRef.current = null;
 
     if (window.localStream && videoEnabled) {
-      // If video is enabled, switch back to camera
+      // If video is enabled, switch back to camera with proper track replacement
       const cameraTrack = window.localStream.getVideoTracks()[0];
-      Object.values(connections.current).forEach((pc) => {
-        const sender = pc.getSenders().find((s) => s.track?.kind === "video");
-        if (sender && cameraTrack) {
-          sender.replaceTrack(cameraTrack);
-        }
-      });
+      if (cameraTrack) {
+        Object.values(connections.current).forEach((pc) => {
+          const videoSender = pc.getSenders().find((s) => s.track?.kind === "video");
+          if (videoSender) {
+            videoSender.replaceTrack(cameraTrack).catch(console.error);
+          }
+        });
 
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = window.localStream;
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = window.localStream;
+          localVideoRef.current.play().catch(console.error);
+        }
       }
     } else {
       // If video is disabled, remove video track from peer connections
       Object.values(connections.current).forEach((pc) => {
-        const sender = pc.getSenders().find((s) => s.track?.kind === "video");
-        if (sender) {
-          pc.removeTrack(sender);
+        const videoSender = pc.getSenders().find((s) => s.track?.kind === "video");
+        if (videoSender) {
+          pc.removeTrack(videoSender);
         }
       });
 
@@ -469,9 +595,17 @@ export default function LiveStreaming() {
                     autoPlay 
                     muted 
                     playsInline 
-                    className={`w-full h-48 sm:h-56 lg:h-64 object-cover transition-opacity duration-300 ${
+                    className={`w-full h-48 sm:h-56 lg:h-64 object-cover transition-opacity duration-300 bg-gray-800 rounded-2xl ${
                       videoEnabled ? 'opacity-100' : 'opacity-0'
                     }`}
+                    onLoadedMetadata={(e) => {
+                      const video = e.target as HTMLVideoElement;
+                      video.play().catch(console.error);
+                    }}
+                    onCanPlay={(e) => {
+                      const video = e.target as HTMLVideoElement;
+                      video.play().catch(console.error);
+                    }}
                   />
                   
                   {/* Video Off Overlay */}
@@ -552,11 +686,22 @@ export default function LiveStreaming() {
                         <div className="relative rounded-xl overflow-hidden shadow-lg border-2 border-teal-200/50 bg-gray-900 transition-transform duration-300 group-hover:scale-105">
                           <video
                             ref={(ref) => {
-                              if (ref && v.stream) ref.srcObject = v.stream;
+                              if (ref && v.stream) {
+                                ref.srcObject = v.stream;
+                                ref.play().catch(console.error);
+                              }
                             }}
                             autoPlay
                             playsInline
-                            className="w-full h-36 sm:h-40 object-cover"
+                            className="w-full h-36 sm:h-40 object-cover bg-gray-800"
+                            onLoadedMetadata={(e) => {
+                              const video = e.target as HTMLVideoElement;
+                              video.play().catch(console.error);
+                            }}
+                            onCanPlay={(e) => {
+                              const video = e.target as HTMLVideoElement;
+                              video.play().catch(console.error);
+                            }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
                           

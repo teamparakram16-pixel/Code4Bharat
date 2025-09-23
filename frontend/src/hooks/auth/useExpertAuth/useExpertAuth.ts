@@ -17,7 +17,7 @@ const useExpertAuth = () => {
         {
           email,
           password,
-          role: "expert",
+          role: "Expert",
         }
       );
 

@@ -16,7 +16,7 @@ import { Server } from "socket.io";
 
 import successStoryRoute from "./routes/successStory.js";
 import contactUsRoute from "./routes/contactUs.js";
-
+import appointMent from "./routes/appointment.js"
 import { Strategy as localStrategy } from "passport-local";
 import Expert from "./models/Expert/Expert.js";
 import User from "./models/User/User.js";
@@ -46,6 +46,7 @@ import Chat from "./models/Chat/Chat.js";
 import PremiumOption from "./models/PremiumOption/premiumOption.js";
 import medicineRoutes from "./routes/medicine.js";
 import connectToSocket from "./controllers/socketController.js";
+import appointmentRoutes from "./routes/appointment.js";
 const app = express();
 
 main()
@@ -188,7 +189,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/prakrithi", prakrathiRoutes);
 app.use("/api/medicines",medicineRoutes)
 // app.use("/api/healthChallenge", healthChallenge);
-
+app.use("/api/appointment",appointmentRoutes)
 app.use("/api/chat", chatRoutes);
 
 app.use("/api/premium", premiumRoute);

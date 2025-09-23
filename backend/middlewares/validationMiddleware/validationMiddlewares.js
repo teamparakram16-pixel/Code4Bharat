@@ -136,8 +136,10 @@ export const validateExpertSignup = (req, res, next) => {
 };
 
 export const validateLogin = (req, res, next) => {
+  console.log("Validating login data:", req.body);
   const result = loginSchema.safeParse(req.body);
   if (!result.success) throw new ExpressError(400, parseZodError(result.error));
+  console.log("Login data is valid:", result.data);
   req.validatedData = result.data;
   next();
 };
@@ -163,6 +165,17 @@ export const validatePaymentBody = (req, res, next) => {
   next();
 };
 
+export const validateMedicalRoutineAppointment = (req, res, next) => {
+  const result = medicalRoutineAppointmentSchema.safeParse(
+    req.body.appointmentData
+  );
+  if (!result.success) {
+    throw new ExpressError(400, parseZodError(result.error));
+  }
+  req.validatedData = result.data;
+  next();
+};
+
 export default {
   validateUser,
   validateExpert,
@@ -178,4 +191,5 @@ export default {
   checkChatRequestDoesNotContainCurrentUser,
   validateContactUs,
   validatePaymentBody,
+  validateMedicalRoutineAppointment,
 };
