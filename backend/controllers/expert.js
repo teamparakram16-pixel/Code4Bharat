@@ -3,6 +3,7 @@ import ExpressError from "../utils/expressError.js";
 import Routine from "../models/Routines/Routines.js";
 import Post from "../models/Post/Post.js";
 import { successStoryEmail } from "../utils/sendssstorystatus.js";
+import Chat from "../models/Chat/Chat.js";
 
 // PATCH /experts/complete-profile
 export const completeProfile = async (req, res) => {
@@ -164,32 +165,33 @@ const editExpert = async (req, res) => {
 // };
 
 export const getExpertPosts = async (req, res) => {
-  const userId = req.user._id;
+  const expertId = req.params.id;
   const filter = req.query.q;
 
-  if (!userId) throw new ExpressError(401, "Unauthorized access");
+  if (!expertId) throw new ExpressError(401, "Unauthorized access");
 
   let posts = [];
   let routines = [];
 
   if (filter === "routines") {
-    routines = await Routine.find({ owner: userId }).sort({ createdAt: -1 });
+    routines = await Routine.find({ owner: expertId }).sort({ createdAt: -1 });
     return res.status(200).json({ posts: routines });
   }
 
   if (filter === "general") {
-    posts = await Post.find({ owner: userId }).sort({ createdAt: -1 });
+    posts = await Post.find({ owner: expertId }).sort({ createdAt: -1 });
     return res.status(200).json({ posts });
   }
 
   // If no filter or unknown filter, return both
-  posts = await Post.find({ owner: userId }).sort({ createdAt: -1 });
-  routines = await Routine.find({ owner: userId }).sort({ createdAt: -1 });
+  posts = await Post.find({ owner: expertId }).sort({ createdAt: -1 });
+  routines = await Routine.find({ owner: expertId }).sort({ createdAt: -1 });
 
   // Combine and sort both by date (optional)
   const combined = [...posts, ...routines].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  res.status(200).json({ posts: combined });
+
+  return res.status(200).json({ posts: combined });
 };
 
 
@@ -251,7 +253,7 @@ const updateProfile = async (req, res) => {
 
     return res.status(200).json({
       message: "Profile updated successfully",
-      expert : updatedExpert,
+      expert: updatedExpert,
     });
   } catch (error) {
     console.error("Update profile error:", error);
@@ -372,9 +374,58 @@ const sendsstorystatus = async (req, res) => {
         : "Verification email sent successfully."
     });
   } catch (error) {
-      console.log("Error sending email :" , error.message)
+    console.log("Error sending email :", error.message)
   }
 
+}
+
+const establishusertoexpertchat = async (req, res) => {
+  try {
+      const userId = req.user._id;
+
+      const {expertId} = req.params;
+
+
+      const expert = await Expert.findById(expertId);
+
+      if(!expert)
+        return res.status(400).json({
+      message:"Expert does not exist !"
+    });
+
+    let existingchat = await Chat.findOne({
+      groupChat : false,
+      participants : {
+        $all : [
+          {$elemMatch : { user: userId, userType: "User" } },
+          {$elemMatch : { user: expertId, userType: "Expert" } }
+        ],
+      },
+    });
+
+    if(existingchat)
+      return res.status(200).json({ chat: existingchat, message: "Chat already exists" });
+
+    const newChat = new Chat({
+      participants:[
+        {user : userId , userType : "User"},
+        {user : expertId , userType : "Expert"}
+      ],
+      groupChat : false,
+      ownerType: "User",
+      owner : userId
+    });
+
+    await newChat.save()
+    
+
+    return res.status(201).json({ chat: newChat, message: "Chat established successfully" });
+
+
+  } catch (error) {
+    console.error("Error establishing chat:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 }
 
 export default {
@@ -390,5 +441,6 @@ export default {
   addBookmarks,
   removeBookmarks,
   changePassword,
-  sendsstorystatus
+  sendsstorystatus,
+  establishusertoexpertchat
 };

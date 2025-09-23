@@ -2,6 +2,7 @@ import { toast } from "react-toastify";
 import useApi from "../useApi/useApi";
 import { handleAxiosError } from "@/utils/handleAxiosError";
 import { PostFormSchema } from "./usePost.types";
+import axios from "axios";
 
 const usePost = () => {
   const { post, get, del, put } = useApi();
@@ -102,6 +103,40 @@ const usePost = () => {
     }
   };
 
+  const getExpertPosts = async (id: string, filter?: string) => {
+    try {
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_SERVER_URL}/api/experts/${id}/posts`,
+        { params: { q: filter } }
+      );
+      toast.success("Fetched Posts Successfully !");
+      return data.posts;
+    }
+    catch (error) {
+      console.log("Error fetching posts : ", error)
+      toast.error("Error fetching posts")
+    }
+  }
+
+  const getexpertChatId = async (expertId: string) => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_SERVER_URL}/api/experts/${expertId}/chats`,
+        {},
+        { withCredentials: true }
+      );
+
+      const { chat , message } = response.data;
+      toast.success(message);
+
+      return chat._id;
+
+    } catch (error) {
+        console.log("Error establishing chat with expert ! ");
+        toast.error("Error chatting with the expert !")
+    }
+  }
+
   return {
     submitPost,
     getAllPosts,
@@ -109,6 +144,8 @@ const usePost = () => {
     filterSearch,
     deleteGeneralPost,
     updatePost,
+    getExpertPosts,
+    getexpertChatId
   };
 
 };
