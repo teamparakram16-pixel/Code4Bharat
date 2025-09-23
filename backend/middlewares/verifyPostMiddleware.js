@@ -7,6 +7,8 @@ import mime from "mime-types";
 import fs from "fs/promises";
 import path from "path";
 import removeLocalFiles from "../utils/cloudinary/uploadUtils/removeLocalDiskFiles.js";
+import axiosInstance from "../utils/axioscalls.js"
+import { resolvePtr } from "dns/promises";
 
 /**
  * Middleware to verify uploaded media and text using AI models.
@@ -18,7 +20,24 @@ export const verifyPostData = async (req, res, next) => {
   // Combine all textual content including routines and potential PDF text
   let combinedText = `${title}\n${description}\n${routines.join(", ")}`;
 
+  
+
   try {
+
+    // Two Step verifcation - first Azure for Violence Check and second is gemini
+
+    // Step 1 : Azure Sevices:
+    const response = await axiosInstance.post("",{combinedText});
+    console.log("Response from the azure : ",response.data)
+
+    const categories = response.data.categoriesAnalysis || [];
+
+    const filteredcategories = categories.filter((c) =>c.severity >= 2)
+
+    if(filteredcategories.length > 0){
+      throw new ExpressError(400,"Your text has violent or harmful content ! Consider revising it ...");
+    }
+
     // Validate each uploaded file
     for (const file of files) {
       let { buffer, mimetype } = file;
