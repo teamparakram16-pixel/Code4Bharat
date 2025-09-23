@@ -7,6 +7,7 @@ import mime from "mime-types";
 import fs from "fs/promises";
 import path from "path";
 import removeLocalFiles from "../utils/cloudinary/uploadUtils/removeLocalDiskFiles.js";
+import axiosInstance from "../utils/axioscalls.js"
 
 /**
  * Middleware to verify uploaded media and text using AI models.
@@ -18,7 +19,25 @@ export const verifyPostData = async (req, res, next) => {
   // Combine all textual content including routines and potential PDF text
   let combinedText = `${title}\n${description}\n${routines.join(", ")}`;
 
+
+
   try {
+
+    // Two Step verifcation - first Azure for Violence Check and second is gemini
+
+    // Step 1 : Azure Sevices:
+    const response = await axiosInstance.post("/contentsafety/text:analyze?api-version=2024-09-01", 
+      {text : combinedText }
+    );
+
+    const categories = response.data.categoriesAnalysis || [];
+
+    const filteredcategories = categories.filter((c) => c.severity >= 2)
+
+    if (filteredcategories.length > 0) {
+      throw new ExpressError(400, "Your text has violent or harmful content ! Consider revising it ...");
+    }
+
     // Validate each uploaded file
     for (const file of files) {
       let { buffer, mimetype } = file;
@@ -51,8 +70,7 @@ export const verifyPostData = async (req, res, next) => {
         if (!isValidMedia) {
           throw new ExpressError(
             400,
-            `The uploaded ${
-              mimetype.split("/")[0]
+            `The uploaded ${mimetype.split("/")[0]
             } file failed content verification.`
           );
         }
@@ -78,15 +96,15 @@ export const verifyPostData = async (req, res, next) => {
             console.log("Error occurred in pdf parser : ", err);
           });
 
-  
 
-          let isValidPdfText = false;
 
-          if(response && response.data && response.data.Response) {
-               isValidPdfText = await verifyTextContent(response.data.Response);
-          }
+        let isValidPdfText = false;
 
-       
+        if (response && response.data && response.data.Response) {
+          isValidPdfText = await verifyTextContent(response.data.Response);
+        }
+
+
 
         // const isValidPdfText = true;
 
