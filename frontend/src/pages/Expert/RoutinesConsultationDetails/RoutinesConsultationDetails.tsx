@@ -33,6 +33,7 @@ import { motion } from "framer-motion";
 import { useAppointmentsHooks } from "@/hooks/useAppointmentHooks/useAppointmentHook"; // Import your hook
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib"; // Add these imports at the top
 import { toast } from "react-toastify";
+import { useAuth } from "@/context/AuthContext"; // Add this import
 
 // interface Patient {
 //   id: string;
@@ -139,6 +140,99 @@ interface RoutineItem {
 //   updatedAt: "2024-03-19T16:45:00Z",
 // };
 
+const demoRoutineItems = [
+  {
+    id: "1",
+    category: "exercise",
+    title: "Morning Yoga",
+    description: "Gentle yoga stretches to start the day.",
+    duration: "20 minutes",
+    frequency: "Daily",
+    instructions: "Focus on breathing and flexibility.",
+  },
+  {
+    id: "2",
+    category: "diet",
+    title: "Warm Herbal Tea",
+    description: "Drink a cup of ginger-cinnamon tea after breakfast.",
+    duration: "5 minutes",
+    frequency: "Daily",
+    instructions: "Use fresh ginger and cinnamon.",
+  },
+  {
+    id: "3",
+    category: "lifestyle",
+    title: "Mindful Walking",
+    description: "Take a walk in nature or a park.",
+    duration: "30 minutes",
+    frequency: "3x per week",
+    instructions: "Walk at a comfortable pace.",
+  },
+  {
+    id: "4",
+    category: "meditation",
+    title: "Evening Meditation",
+    description: "Practice guided meditation before sleep.",
+    duration: "15 minutes",
+    frequency: "Daily",
+    instructions: "Use a meditation app or audio.",
+  },
+  {
+    id: "5",
+    category: "diet",
+    title: "Balanced Lunch",
+    description: "Include cooked vegetables and lentils.",
+    duration: "30 minutes",
+    frequency: "Daily",
+    instructions: "Avoid spicy and oily foods.",
+  },
+  {
+    id: "6",
+    category: "exercise",
+    title: "Strength Training",
+    description: "Light resistance exercises.",
+    duration: "20 minutes",
+    frequency: "2x per week",
+    instructions: "Use bodyweight or light dumbbells.",
+  },
+  {
+    id: "7",
+    category: "lifestyle",
+    title: "Sleep Hygiene",
+    description: "Maintain a consistent sleep schedule.",
+    duration: "8 hours",
+    frequency: "Daily",
+    instructions: "Avoid screens 30 minutes before bed.",
+  },
+  {
+    id: "8",
+    category: "meditation",
+    title: "Breathing Exercises",
+    description: "Practice deep breathing in the afternoon.",
+    duration: "10 minutes",
+    frequency: "Daily",
+    instructions: "Inhale for 4 seconds, exhale for 6 seconds.",
+  },
+  {
+    id: "9",
+    category: "diet",
+    title: "Hydration",
+    description: "Drink 2 liters of water throughout the day.",
+    duration: "All day",
+    frequency: "Daily",
+    instructions: "Sip water, avoid cold drinks.",
+  },
+  {
+    id: "10",
+    category: "lifestyle",
+    title: "Social Connection",
+    description: "Spend time with friends or family.",
+    duration: "1 hour",
+    frequency: "Weekly",
+    instructions: "Engage in positive conversations.",
+  },
+];
+
 const RoutinesConsultationDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   // const navigate = useNavigate();
@@ -148,6 +242,7 @@ const RoutinesConsultationDetails: React.FC = () => {
     shareRoutineAppointment,
     submit,
   } = useAppointmentsHooks();
+  const { role } = useAuth(); // Get role from context
 
   const [consultation, setConsultation] = useState<any>(null);
   const [shareRoutineDialogOpen, setShareRoutineDialogOpen] = useState(false);
@@ -560,6 +655,11 @@ const RoutinesConsultationDetails: React.FC = () => {
     }
   };
 
+  const handleDemoData = () => {
+    setRoutineItems(demoRoutineItems);
+    setDoctorNotes("This is a demo doctor's note for the routine.");
+  };
+
   if (loading || consultation === null) {
     return (
       <Container maxWidth="lg" sx={{ py: 3 }}>
@@ -859,14 +959,16 @@ const RoutinesConsultationDetails: React.FC = () => {
               Download Routine PDF
             </Button>
           ) : (
-            <Button
-              variant="contained"
-              color="secondary"
-              startIcon={<Share />}
-              onClick={() => setShareRoutineDialogOpen(true)}
-            >
-              Share Routine
-            </Button>
+            role === "expert" && (
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<Share />}
+                onClick={() => setShareRoutineDialogOpen(true)}
+              >
+                Share Routine
+              </Button>
+            )
           )}
         </Box>
 
@@ -886,6 +988,18 @@ const RoutinesConsultationDetails: React.FC = () => {
               Create a personalized Ayurvedic routine based on the patient's
               Prakriti analysis and health goals.
             </Typography>
+
+            {/* Add Demo Data Button inside the dialog */}
+            <Box sx={{ mb: 2 }}>
+              <Button
+                variant="outlined"
+                color="info"
+                onClick={handleDemoData}
+                sx={{ mr: 2 }}
+              >
+                Fill Demo Data
+              </Button>
+            </Box>
 
             {/* Add New Routine Item */}
             <Card variant="outlined" sx={{ mb: 3, p: 2 }}>
@@ -1120,6 +1234,7 @@ const RoutinesConsultationDetails: React.FC = () => {
             </Button>
           )}
         </Box>
+
       </motion.div>
     </Container>
   );

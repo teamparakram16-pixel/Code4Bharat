@@ -203,7 +203,7 @@ const useUserAppointments = () => {
     // Computed
     getUpcomingAppointments,
     getPastAppointments,
-    totalAppointments: consultations.length + routineAppointments.length,
+    totalAppointments: consultations?.length + routineAppointments.length,
   };
 };
 

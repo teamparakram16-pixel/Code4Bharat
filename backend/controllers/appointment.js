@@ -82,13 +82,19 @@ export const createAppointment = wrapAsync(async (req, res) => {
 // Get all appointments of logged-in user
 export const getUserAppointments = wrapAsync(async (req, res) => {
   const userId = req.user._id;
-  console.log(userId)
+  console.log(userId);
   const appointments = await Appointment.find({ user: userId })
-  .populate("expert", "name email")
-  .populate("prakriti")
-  .sort({ updatedAt: -1 });
+    .populate("expert", "name email profile")
+    .populate("prakriti")
 
-  const routineAppointments = await RoutineAppointment.find({ userId });
+    .sort({ updatedAt: -1 });
+
+  const routineAppointments = await RoutineAppointment.find({ userId })
+    .populate("doctorId", "name email profile")
+    .populate("prakrithiAnalysis")
+    .sort({ updatedAt: -1 });
+
+  console.log({ appointments, routineAppointments });
   res.status(200).json({ appointments, routineAppointments });
 });
 
@@ -98,7 +104,13 @@ export const getExpertAppointments = wrapAsync(async (req, res) => {
   const appointments = await Appointment.find({ expert: expertId })
     .populate("user", "name email")
     .populate("prakriti");
-  res.status(200).json({ appointments });
+  const routineAppointments = await RoutineAppointment.find({
+    doctorId: expertId,
+  })
+    .populate("doctorId", "name email profile")
+    .populate("prakrithiAnalysis")
+    .sort({ updatedAt: -1 });
+  res.status(200).json({ appointments, routineAppointments });
 });
 
 export const getAppointmentByMeetId = wrapAsync(async (req, res) => {

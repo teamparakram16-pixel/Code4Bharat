@@ -57,6 +57,8 @@ export const useAppointmentsHooks = () => {
         `${import.meta.env.VITE_SERVER_URL}/api/appointment/consultations/user`
       );
 
+      console.log("User Appointments Data:", data); // Debug log
+
       return data;
     } catch (err: any) {
       setError(
@@ -88,6 +90,7 @@ export const useAppointmentsHooks = () => {
         `${import.meta.env.VITE_SERVER_URL
         }/api/appointment/consultations/expert`
       );
+      console.log("Expert Appointments Data:", data); // Debug log
       return data;
     } catch (err: any) {
       setError(
