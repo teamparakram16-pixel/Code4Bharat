@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Card,
   CardContent,
@@ -34,7 +34,7 @@ interface ConsultationAppointmentCardProps {
 
 const ConsultationAppointmentCard: React.FC<
   ConsultationAppointmentCardProps
-> = ({ appointment, onCancel, onReschedule, onJoinMeeting }) => {
+> = ({ appointment, onCancel, onReschedule }) => {
   const theme = useTheme();
   const navigate = useNavigate();
 
