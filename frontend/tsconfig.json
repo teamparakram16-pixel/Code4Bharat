@@ -13,11 +13,13 @@
   //   "forceConsistentCasingInFileNames": true,
   //   "strict": true
   // }
-  
+
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   }
 }

@@ -1,58 +1,64 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Card, 
-  CardContent, 
-  Typography, 
-  Button, 
-  Box, 
+import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Box,
   TextField,
   Alert,
   CircularProgress,
   Container,
   Paper,
   Avatar,
-  Chip
-} from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { motion } from 'framer-motion';
-import dayjs, { Dayjs } from 'dayjs';
-import { CalendarMonth, Person, CheckCircle } from '@mui/icons-material';
-import { toast } from 'react-toastify';
+  Chip,
+} from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import { motion } from "framer-motion";
+import dayjs, { Dayjs } from "dayjs";
+import { CalendarMonth, Person, CheckCircle } from "@mui/icons-material";
+import { toast } from "react-toastify";
+import { useAppointmentsHooks } from "@/hooks/useAppointmentHooks/useAppointmentHook";
 
 const Appointment: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+  const { createAppointment } = useAppointmentsHooks();
+
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [selectedTime, setSelectedTime] = useState<Dayjs | null>(null);
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Mock doctor data - replace with actual API call
   const doctorInfo = {
     id: id,
-    name: 'Dr. Rajesh Kumar',
-    specialization: 'Ayurveda Specialist',
-    experience: '15+ years',
+    name: "Dr. Rajesh Kumar",
+    specialization: "Ayurveda Specialist",
+    experience: "15+ years",
     rating: 4.8,
-    avatar: '/api/placeholder/150/150',
+    avatar: "/api/placeholder/150/150",
     consultationFee: 500,
-    availability: 'Mon-Sat 10:00 AM - 6:00 PM'
+    availability: "Mon-Sat 10:00 AM - 6:00 PM",
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    if (!id) {
+      toast.error("Invalid doctor ID");
+      return;
+    }
     e.preventDefault();
-    
+
     if (!selectedDate || !selectedTime) {
-      setError('Please select both date and time for your appointment');
+      setError("Please select both date and time for your appointment");
       return;
     }
 
-    if (selectedDate.isBefore(dayjs(), 'day')) {
-      setError('Please select a future date for your appointment');
+    if (selectedDate.isBefore(dayjs(), "day")) {
+      setError("Please select a future date for your appointment");
       return;
     }
 
@@ -60,26 +66,8 @@ const Appointment: React.FC = () => {
     setError(null);
 
     try {
-<<<<<<< HEAD
-      // API call to book appointment - would include:
-      // - doctorId: id
-      // - date: selectedDate.format('YYYY-MM-DD')
-      // - time: selectedTime.format('HH:mm')
-      // - notes: notes.trim()
-      // - type: 'regular'
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast.success('Appointment booked successfully!');
-      navigate('/u/appointments'); // Navigate to appointments list
-    } catch (error) {
-      console.error('Error booking appointment:', error);
-      setError('Failed to book appointment. Please try again.');
-      toast.error('Failed to book appointment');
-=======
       await createAppointment({
-        expertId: expertId!, // send the param to backend
+        expertId: id, // send the param to backend
         appointmentDate: selectedDate.format("YYYY-MM-DD"),
         appointmentTime: selectedTime.format("HH:mm"),
         description: notes.trim(),
@@ -90,14 +78,13 @@ const Appointment: React.FC = () => {
       console.error(error);
       setError(error.message || "Failed to book appointment");
       toast.error(error.message || "Failed to book appointment");
->>>>>>> e2add52d46ae4a592e53654cf8af25137dac38c9
     } finally {
       setLoading(false);
     }
   };
 
-  const minDate = dayjs().add(1, 'day'); // Minimum date is tomorrow
-  const maxDate = dayjs().add(30, 'day'); // Maximum 30 days ahead
+  const minDate = dayjs().add(1, "day"); // Minimum date is tomorrow
+  const maxDate = dayjs().add(30, "day"); // Maximum 30 days ahead
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -110,11 +97,11 @@ const Appointment: React.FC = () => {
         <Paper
           elevation={0}
           sx={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            color: "white",
             p: 4,
             borderRadius: 3,
-            mb: 3
+            mb: 3,
           }}
         >
           <Typography variant="h4" fontWeight="bold" gutterBottom>
@@ -125,15 +112,12 @@ const Appointment: React.FC = () => {
           </Typography>
         </Paper>
 
-        <Box display="flex" gap={3} flexDirection={{ xs: 'column', md: 'row' }}>
+        <Box display="flex" gap={3} flexDirection={{ xs: "column", md: "row" }}>
           {/* Doctor Information Card */}
-          <Card sx={{ flex: 1, height: 'fit-content' }}>
+          <Card sx={{ flex: 1, height: "fit-content" }}>
             <CardContent sx={{ p: 3 }}>
               <Box display="flex" alignItems="center" gap={2} mb={2}>
-                <Avatar
-                  src={doctorInfo.avatar}
-                  sx={{ width: 80, height: 80 }}
-                >
+                <Avatar src={doctorInfo.avatar} sx={{ width: 80, height: 80 }}>
                   <Person sx={{ fontSize: 40 }} />
                 </Avatar>
                 <Box flex={1}>
@@ -160,8 +144,12 @@ const Appointment: React.FC = () => {
                 </Box>
               </Box>
 
-              <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 2, mb: 2 }}>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Box sx={{ bgcolor: "grey.50", p: 2, borderRadius: 2, mb: 2 }}>
+                <Typography
+                  variant="subtitle2"
+                  color="text.secondary"
+                  gutterBottom
+                >
                   Consultation Details
                 </Typography>
                 <Typography variant="body2" sx={{ mb: 1 }}>
@@ -174,7 +162,7 @@ const Appointment: React.FC = () => {
 
               <Alert severity="info" sx={{ mt: 2 }}>
                 <Typography variant="body2">
-                  Please arrive 10 minutes early for your appointment. 
+                  Please arrive 10 minutes early for your appointment.
                   Cancellations must be made at least 2 hours in advance.
                 </Typography>
               </Alert>
@@ -184,7 +172,11 @@ const Appointment: React.FC = () => {
           {/* Appointment Booking Form */}
           <Card sx={{ flex: 1.5 }}>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ display: "flex", alignItems: "center", gap: 1 }}
+              >
                 <CalendarMonth color="primary" />
                 Select Date & Time
               </Typography>
@@ -201,15 +193,17 @@ const Appointment: React.FC = () => {
                   <DatePicker
                     label="Select Date"
                     value={selectedDate}
-                    onChange={(newValue) => setSelectedDate(newValue ? dayjs(newValue) : null)}
+                    onChange={(newValue) =>
+                      setSelectedDate(newValue ? dayjs(newValue) : null)
+                    }
                     minDate={minDate}
                     maxDate={maxDate}
                     slotProps={{
                       textField: {
                         fullWidth: true,
                         required: true,
-                        helperText: 'Choose a date within the next 30 days'
-                      }
+                        helperText: "Choose a date within the next 30 days",
+                      },
                     }}
                   />
 
@@ -217,15 +211,17 @@ const Appointment: React.FC = () => {
                   <TimePicker
                     label="Select Time"
                     value={selectedTime}
-                    onChange={(newValue) => setSelectedTime(newValue ? dayjs(newValue) : null)}
+                    onChange={(newValue) =>
+                      setSelectedTime(newValue ? dayjs(newValue) : null)
+                    }
                     minTime={dayjs().hour(10).minute(0)}
                     maxTime={dayjs().hour(17).minute(0)}
                     slotProps={{
                       textField: {
                         fullWidth: true,
                         required: true,
-                        helperText: 'Available: 10:00 AM - 5:00 PM'
-                      }
+                        helperText: "Available: 10:00 AM - 5:00 PM",
+                      },
                     }}
                   />
 
@@ -244,15 +240,20 @@ const Appointment: React.FC = () => {
 
                   {/* Summary */}
                   {selectedDate && selectedTime && (
-                    <Box sx={{ bgcolor: 'primary.50', p: 2, borderRadius: 2 }}>
-                      <Typography variant="subtitle2" color="primary" gutterBottom>
+                    <Box sx={{ bgcolor: "primary.50", p: 2, borderRadius: 2 }}>
+                      <Typography
+                        variant="subtitle2"
+                        color="primary"
+                        gutterBottom
+                      >
                         Appointment Summary
                       </Typography>
                       <Typography variant="body2" sx={{ mb: 1 }}>
-                        <strong>Date:</strong> {selectedDate.format('MMMM DD, YYYY (dddd)')}
+                        <strong>Date:</strong>{" "}
+                        {selectedDate.format("MMMM DD, YYYY (dddd)")}
                       </Typography>
                       <Typography variant="body2" sx={{ mb: 1 }}>
-                        <strong>Time:</strong> {selectedTime.format('hh:mm A')}
+                        <strong>Time:</strong> {selectedTime.format("hh:mm A")}
                       </Typography>
                       <Typography variant="body2">
                         <strong>Doctor:</strong> {doctorInfo.name}
@@ -266,16 +267,20 @@ const Appointment: React.FC = () => {
                     variant="contained"
                     size="large"
                     disabled={loading || !selectedDate || !selectedTime}
-                    startIcon={loading ? <CircularProgress size={20} /> : <CheckCircle />}
+                    startIcon={
+                      loading ? <CircularProgress size={20} /> : <CheckCircle />
+                    }
                     sx={{
                       py: 1.5,
-                      background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
-                      '&:hover': {
-                        background: 'linear-gradient(45deg, #5a6fd8 30%, #6a4190 90%)',
-                      }
+                      background:
+                        "linear-gradient(45deg, #667eea 30%, #764ba2 90%)",
+                      "&:hover": {
+                        background:
+                          "linear-gradient(45deg, #5a6fd8 30%, #6a4190 90%)",
+                      },
                     }}
                   >
-                    {loading ? 'Booking Appointment...' : 'Book Appointment'}
+                    {loading ? "Booking Appointment..." : "Book Appointment"}
                   </Button>
 
                   {/* Cancel Button */}
