@@ -3,7 +3,6 @@ import { toast } from "react-toastify";
 import useApi from "../useApi/useApi";
 import { RoutineAppointment } from "./useAppointmentHook.types";
 import { handleAxiosError } from "@/utils/handleAxiosError";
-import { set } from "lodash";
 
 interface AppointmentPayload {
   expertId: string;

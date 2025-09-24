@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -30,38 +30,37 @@ import {
   Delete,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import dayjs from "dayjs";
 import { useAppointmentsHooks } from "@/hooks/useAppointmentHooks/useAppointmentHook"; // Import your hook
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib"; // Add these imports at the top
 import { toast } from "react-toastify";
 
-interface Patient {
-  id: string;
-  name: string;
-  age: number;
-  gender: string;
-  phone: string;
-  email: string;
-  address: string;
-  avatar?: string;
-}
+// interface Patient {
+//   id: string;
+//   name: string;
+//   age: number;
+//   gender: string;
+//   phone: string;
+//   email: string;
+//   address: string;
+//   avatar?: string;
+// }
 
-interface PrakritiData {
-  vata: number;
-  pitta: number;
-  kapha: number;
-  dominantDosha: "vata" | "pitta" | "kapha";
-  assessmentDate: string;
-}
+// interface PrakritiData {
+//   vata: number;
+//   pitta: number;
+//   kapha: number;
+//   dominantDosha: "vata" | "pitta" | "kapha";
+//   assessmentDate: string;
+// }
 
-interface HealthMetrics {
-  bmi: number;
-  bloodPressure: string;
-  heartRate: number;
-  sleepQuality: number; // 1-10 scale
-  stressLevel: number; // 1-10 scale
-  energyLevel: number; // 1-10 scale
-}
+// interface HealthMetrics {
+//   bmi: number;
+//   bloodPressure: string;
+//   heartRate: number;
+//   sleepQuality: number; // 1-10 scale
+//   stressLevel: number; // 1-10 scale
+//   energyLevel: number; // 1-10 scale
+// }
 
 interface RoutineItem {
   id: string;
@@ -73,76 +72,76 @@ interface RoutineItem {
   instructions: string;
 }
 
-interface RoutinesConsultation {
-  id: string;
-  patient: Patient;
-  date: string;
-  time: string;
-  status: "pending" | "routine_shared" | "completed";
-  urgency: "low" | "medium" | "high";
-  goals: string[];
-  concerns: string[];
-  notes: string;
-  prakritiData: PrakritiData;
-  healthMetrics: HealthMetrics;
-  sharedRoutine?: RoutineItem[];
-  doctorNotes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// interface RoutinesConsultation {
+//   id: string;
+//   patient: Patient;
+//   date: string;
+//   time: string;
+//   status: "pending" | "routine_shared" | "completed";
+//   urgency: "low" | "medium" | "high";
+//   goals: string[];
+//   concerns: string[];
+//   notes: string;
+//   prakritiData: PrakritiData;
+//   healthMetrics: HealthMetrics;
+//   sharedRoutine?: RoutineItem[];
+//   doctorNotes?: string;
+//   createdAt: string;
+//   updatedAt: string;
+// }
 
 // Mock data
-const mockRoutinesConsultation: RoutinesConsultation = {
-  id: "2",
-  patient: {
-    id: "p2",
-    name: "Priya Sharma",
-    age: 28,
-    gender: "Female",
-    phone: "‪+91 87654 32109‬",
-    email: "priya.sharma@email.com",
-    address: "456 Brigade Road, Bangalore, Karnataka 560025",
-  },
-  date: "2024-03-20",
-  time: "11:30 AM",
-  status: "pending",
-  urgency: "medium",
-  goals: [
-    "Weight management",
-    "Stress reduction",
-    "Better sleep",
-    "Increased energy",
-  ],
-  concerns: [
-    "Irregular sleep patterns",
-    "Digestive issues",
-    "Work stress",
-    "Low energy",
-  ],
-  notes:
-    "Looking for a personalized Ayurvedic routine to improve overall health and well-being. Work schedule is demanding with irregular hours. Interested in meditation and yoga practices.",
-  prakritiData: {
-    vata: 65,
-    pitta: 70,
-    kapha: 25,
-    dominantDosha: "pitta",
-    assessmentDate: "2024-03-15",
-  },
-  healthMetrics: {
-    bmi: 22.5,
-    bloodPressure: "120/80",
-    heartRate: 72,
-    sleepQuality: 4,
-    stressLevel: 7,
-    energyLevel: 5,
-  },
-  createdAt: "2024-03-19T16:45:00Z",
-  updatedAt: "2024-03-19T16:45:00Z",
-};
+// const mockRoutinesConsultation: RoutinesConsultation = {
+//   id: "2",
+//   patient: {
+//     id: "p2",
+//     name: "Priya Sharma",
+//     age: 28,
+//     gender: "Female",
+//     phone: "‪+91 87654 32109‬",
+//     email: "priya.sharma@email.com",
+//     address: "456 Brigade Road, Bangalore, Karnataka 560025",
+//   },
+//   date: "2024-03-20",
+//   time: "11:30 AM",
+//   status: "pending",
+//   urgency: "medium",
+//   goals: [
+//     "Weight management",
+//     "Stress reduction",
+//     "Better sleep",
+//     "Increased energy",
+//   ],
+//   concerns: [
+//     "Irregular sleep patterns",
+//     "Digestive issues",
+//     "Work stress",
+//     "Low energy",
+//   ],
+//   notes:
+//     "Looking for a personalized Ayurvedic routine to improve overall health and well-being. Work schedule is demanding with irregular hours. Interested in meditation and yoga practices.",
+//   prakritiData: {
+//     vata: 65,
+//     pitta: 70,
+//     kapha: 25,
+//     dominantDosha: "pitta",
+//     assessmentDate: "2024-03-15",
+//   },
+//   healthMetrics: {
+//     bmi: 22.5,
+//     bloodPressure: "120/80",
+//     heartRate: 72,
+//     sleepQuality: 4,
+//     stressLevel: 7,
+//     energyLevel: 5,
+//   },
+//   createdAt: "2024-03-19T16:45:00Z",
+//   updatedAt: "2024-03-19T16:45:00Z",
+// };
 
 const RoutinesConsultationDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const {
     getRoutineAppointmentById,
     loading,
@@ -188,27 +187,27 @@ const RoutinesConsultationDetails: React.FC = () => {
     fetchConsultation();
   }, [id]);
 
-  const handleShareRoutine = () => {
-    if (consultation) {
-      setConsultation({
-        ...consultation,
-        status: "routine_shared",
-        sharedRoutine: routineItems,
-        doctorNotes,
-        updatedAt: new Date().toISOString(),
-      });
-      setShareRoutineDialogOpen(false);
+  // const handleShareRoutine = () => {
+  //   if (consultation) {
+  //     setConsultation({
+  //       ...consultation,
+  //       status: "routine_shared",
+  //       sharedRoutine: routineItems,
+  //       doctorNotes,
+  //       updatedAt: new Date().toISOString(),
+  //     });
+  //     setShareRoutineDialogOpen(false);
 
-      console.log("Shared Routine:", {
-        ...consultation,
-        status: "routine_shared",
-        sharedRoutine: routineItems,
-        doctorNotes,
-        updatedAt: new Date().toISOString(),
-      });
-      // Here you would make an API call to update the consultation
-    }
-  };
+  //     console.log("Shared Routine:", {
+  //       ...consultation,
+  //       status: "routine_shared",
+  //       sharedRoutine: routineItems,
+  //       doctorNotes,
+  //       updatedAt: new Date().toISOString(),
+  //     });
+  //     // Here you would make an API call to update the consultation
+  //   }
+  // };
 
   const addRoutineItem = () => {
     if (newRoutineItem.title && newRoutineItem.description) {
@@ -237,18 +236,18 @@ const RoutinesConsultationDetails: React.FC = () => {
     setRoutineItems(routineItems.filter((item) => item.id !== itemId));
   };
 
-  const getDoshaColor = (dosha: string) => {
-    switch (dosha) {
-      case "vata":
-        return "#9C27B0";
-      case "pitta":
-        return "#FF9800";
-      case "kapha":
-        return "#4CAF50";
-      default:
-        return "#757575";
-    }
-  };
+  // const getDoshaColor = (dosha: string) => {
+  //   switch (dosha) {
+  //     case "vata":
+  //       return "#9C27B0";
+  //     case "pitta":
+  //       return "#FF9800";
+  //     case "kapha":
+  //       return "#4CAF50";
+  //     default:
+  //       return "#757575";
+  //   }
+  // };
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -280,13 +279,13 @@ const RoutinesConsultationDetails: React.FC = () => {
     }
   };
 
-  const getHealthMetricColor = (value: number, isHighGood: boolean = true) => {
-    if (isHighGood) {
-      return value >= 7 ? "success" : value >= 4 ? "warning" : "error";
-    } else {
-      return value <= 3 ? "success" : value <= 6 ? "warning" : "error";
-    }
-  };
+  // const getHealthMetricColor = (value: number, isHighGood: boolean = true) => {
+  //   if (isHighGood) {
+  //     return value >= 7 ? "success" : value >= 4 ? "warning" : "error";
+  //   } else {
+  //     return value <= 3 ? "success" : value <= 6 ? "warning" : "error";
+  //   }
+  // };
 
   // PDF Generation function
   const generatePDF = async (responseData: any) => {
@@ -1127,4 +1126,3 @@ const RoutinesConsultationDetails: React.FC = () => {
 };
 
 export default RoutinesConsultationDetails;
-

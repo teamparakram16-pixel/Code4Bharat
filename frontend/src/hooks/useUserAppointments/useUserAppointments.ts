@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState} from "react";
 import useApi from "../useApi/useApi";
 import { handleAxiosError } from "@/utils/handleAxiosError";
 import { toast } from "react-toastify";
