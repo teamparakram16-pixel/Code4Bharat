@@ -64,7 +64,7 @@ import ExpertChangePassword from "./pages/ChangePassword/ExpertChangePassword/Ex
 import UserChangePassword from "./pages/ChangePassword/UserChangePassword/UserChangePassword";
 import UpdatePostForm from "./components/Forms/Expert/UpdatePostForm/UpdatePostForm";
 import UpdateRoutineForm from "./components/Forms/Expert/UpdateRoutineForm/UpdateRoutineForm";
-import DoctorAppointments from "./pages/Expert/DoctorAppointments/DoctorAppointments";
+// import DoctorAppointments from "./pages/Expert/DoctorAppointments/DoctorAppointments";
 // import ConsultationDetails from "./pages/Expert/ConsultationDetails/ConsultationDetails";
 // import RoutinesConsultationDetails from "./pages/Expert/RoutinesConsultationDetails/RoutinesConsultationDetails";
 import MeetingManagement from "./pages/MeetingManagement/MeetingManagement";
