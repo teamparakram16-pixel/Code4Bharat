@@ -637,7 +637,7 @@ const PageNavBar: FC = () => {
                       <MenuItem
                         onClick={() => {
                           handleMenuClose();
-                          navigate("/appointments");
+                          navigate("/u/appointments");
                         }}
                         sx={{ py: 1.5 }}
                       >
@@ -650,7 +650,7 @@ const PageNavBar: FC = () => {
                       <MenuItem
                         onClick={() => {
                           handleMenuClose();
-                          navigate("/user/appointments");
+                          navigate("/u/appointments");
                         }}
                         sx={{ py: 1.5 }}
                       >

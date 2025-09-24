@@ -161,13 +161,7 @@ const App = () => {
               element={<RoutinesAppointment />}
             />
             {/* User Appointments Page */}
-            <Route
-              path="/user/appointments"
-              element={<UserAppointmentsPage />}
-            />
           </Route>
-          <Route path="/live-streaming" element={<LiveStreaming />} />
-          <Route path="/livestreaming/:id" element={<LiveStreaming />} />
           <Route element={<ExpertProtectedRoute />}>
             <Route
               path="/complete-profile/expert"
@@ -187,13 +181,16 @@ const App = () => {
               element={<ExpertChangePassword />}
             />
             {/* Doctor Appointment Routes */}
-            <Route path="/u/appointments" element={<DoctorAppointments />} />
+            {/* <Route path="/u/appointments" element={<DoctorAppointments />} /> */}
 
             {/* Meeting Management Route */}
             <Route path="/meetings" element={<MeetingManagement />} />
           </Route>
 
           <Route element={<ProtectedRoute />}>
+            <Route path="/live-streaming" element={<LiveStreaming />} />
+            <Route path="/livestreaming/:id" element={<LiveStreaming />} />
+            <Route path="/u/appointments" element={<UserAppointmentsPage />} />
             <Route
               path="/appointments/consultation/:id"
               element={<ConsultationDetails />}
