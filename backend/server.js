@@ -17,7 +17,7 @@ import { Server } from "socket.io";
 
 import successStoryRoute from "./routes/successStory.js";
 import contactUsRoute from "./routes/contactUs.js";
-import appointMent from "./routes/appointment.js"
+import appointMent from "./routes/appointment.js";
 import { Strategy as localStrategy } from "passport-local";
 import Expert from "./models/Expert/Expert.js";
 import User from "./models/User/User.js";
@@ -102,10 +102,14 @@ const sessionOptions = {
 app.set("trust proxy", 1);
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended:true }))
+app.use(bodyParser.urlencoded({ extended: true }));
 
 const corsOptions = {
-  origin: ["https://arogyapaths.netlify.app", "http://localhost:5173"],
+  origin: [
+    "https://arogyapaths.netlify.app",
+    "http://localhost:5173",
+    "https://arogyasetuu.netlify.app",
+  ],
   credentials: true,
   methods: ["GET", "PUT", "PATCH", "POST", "DELETE"],
 };
@@ -188,9 +192,9 @@ app.use("/api/experts", expertRoute);
 app.use("/api/users", userRoutes);
 
 app.use("/api/prakrithi", prakrathiRoutes);
-app.use("/api/medicines",medicineRoutes)
+app.use("/api/medicines", medicineRoutes);
 // app.use("/api/healthChallenge", healthChallenge);
-app.use("/api/appointment",appointmentRoutes)
+app.use("/api/appointment", appointmentRoutes);
 app.use("/api/chat", chatRoutes);
 
 app.use("/api/premium", premiumRoute);
@@ -218,11 +222,9 @@ app.use(errorHandler);
 
 const port = process.env.PORT || 3000;
 const io = connectToSocket(server);
- server.listen(port, () => {
+server.listen(port, () => {
   console.log("Server listening on port: ", port);
 });
-
-
 
 // const io = new Server(server, {
 //   pingTimeout: 60000,
