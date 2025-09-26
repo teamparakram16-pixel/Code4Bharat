@@ -47,7 +47,7 @@ export const createAppointment = wrapAsync(async (req, res) => {
 
   const meetId = nanoid();
   const link = `http://localhost:5173/livestreaming/${meetId}`;
-  const linkExpiresAt = new Date(datePart.getTime() + 24 * 60 * 60 * 1000);
+  const linkExpiresAt = new Date(datePart.getTime() + 24 * 60 * 60 * 1000);//24 hours of given time
 
   const appointment = await Appointment.create({
     user: userId,
@@ -86,7 +86,6 @@ export const getUserAppointments = wrapAsync(async (req, res) => {
   const appointments = await Appointment.find({ user: userId })
     .populate("expert", "name email profile")
     .populate("prakriti")
-
     .sort({ updatedAt: -1 });
 
   const routineAppointments = await RoutineAppointment.find({ userId })
@@ -134,7 +133,7 @@ export const getAppointmentByMeetId = wrapAsync(async (req, res) => {
 });
 
 // Update appointment status via email buttons
-export const updateAppointmentStatusViaEmail = wrapAsync(async (req, res) => {
+export const updateAppointmentStatus = wrapAsync(async (req, res) => {
   const { appointmentId } = req.params;
   const { status } = req.query;
 
@@ -154,9 +153,9 @@ export const updateAppointmentStatusViaEmail = wrapAsync(async (req, res) => {
 export const verifyMeetLink = wrapAsync(async (req, res) => {
   const { meetId } = req.params;
   const appointment = await Appointment.findOne({ meetId });
-
   if (!appointment)
     return res.status(404).json({ message: "No such appointment found" });
+
   if (appointment.linkExpiresAt < new Date())
     return res.status(403).json({ message: "expired" });
 
