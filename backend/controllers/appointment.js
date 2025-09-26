@@ -5,6 +5,7 @@ import wrapAsync from "../utils/wrapAsync.js";
 import RoutineAppointment from "../models/RoutineAppointment/RoutineAppointment.js";
 import ExpressError from "../utils/expressError.js";
 import Expert from "../models/Expert/Expert.js";
+import { sendAppointmentMail } from "../utils/sendAppointmentMail.js";
 
 const nanoid = customAlphabet(
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
@@ -46,8 +47,8 @@ export const createAppointment = wrapAsync(async (req, res) => {
   }
 
   const meetId = nanoid();
-  const link = `http://localhost:5173/livestreaming/${meetId}`;
-  const linkExpiresAt = new Date(datePart.getTime() + 24 * 60 * 60 * 1000);
+  const link = `${process.env.VITE_API_URL || "http://localhost:5173"}/livestreaming/${meetId}`;
+  const linkExpiresAt = new Date(datePart.getTime() + 24 * 60 * 60 * 1000); // 24 hours
 
   const appointment = await Appointment.create({
     user: userId,
@@ -61,16 +62,21 @@ export const createAppointment = wrapAsync(async (req, res) => {
   });
 
   // Send confirmation email to expert
-  // try {
-  //   const expert = await Expert.findById(expertId);
-  //   if (expert) {
-  //     await sendAppointmentConfirmationMail(expert, appointment);
-  //   } else {
-  //     console.warn("Expert not found, email not sent.");
-  //   }
-  // } catch (err) {
-  //   console.error("Failed to send appointment confirmation email:", err);
-  // }
+  try {
+    const expert = await Expert.findById(expertId);
+    if (!expert) {
+      console.warn("Expert not found, email not sent.");
+    } else if (!expert.email) {
+      console.warn(`Expert ${expert.name} has no email defined, skipping email.`);
+    } else {
+      console.log("Sending appointment email to expert:", expert.email);
+      await sendAppointmentMail(expert, appointment, req.user.name);
+      console.log("Appointment confirmation email sent successfully.");
+    }
+  } catch (err) {
+    console.error("Failed to send appointment confirmation email:", err);
+  }
+
 
   res.status(201).json({
     success: true,
@@ -86,15 +92,12 @@ export const getUserAppointments = wrapAsync(async (req, res) => {
   const appointments = await Appointment.find({ user: userId })
     .populate("expert", "name email profile")
     .populate("prakriti")
-
     .sort({ updatedAt: -1 });
 
   const routineAppointments = await RoutineAppointment.find({ userId })
     .populate("doctorId", "name email profile")
     .populate("prakrithiAnalysis")
     .sort({ updatedAt: -1 });
-
-  console.log({ appointments, routineAppointments });
   res.status(200).json({ appointments, routineAppointments });
 });
 
@@ -134,7 +137,7 @@ export const getAppointmentByMeetId = wrapAsync(async (req, res) => {
 });
 
 // Update appointment status via email buttons
-export const updateAppointmentStatusViaEmail = wrapAsync(async (req, res) => {
+export const updateAppointmentStatus = wrapAsync(async (req, res) => {
   const { appointmentId } = req.params;
   const { status } = req.query;
 
@@ -154,9 +157,9 @@ export const updateAppointmentStatusViaEmail = wrapAsync(async (req, res) => {
 export const verifyMeetLink = wrapAsync(async (req, res) => {
   const { meetId } = req.params;
   const appointment = await Appointment.findOne({ meetId });
-
   if (!appointment)
     return res.status(404).json({ message: "No such appointment found" });
+
   if (appointment.linkExpiresAt < new Date())
     return res.status(403).json({ message: "expired" });
 

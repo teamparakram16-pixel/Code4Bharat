@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import useApi from "../useApi/useApi";
 import { RoutineAppointment } from "./useAppointmentHook.types";
 import { handleAxiosError } from "@/utils/handleAxiosError";
-
+import { useNavigate } from "react-router-dom";
 interface AppointmentPayload {
   expertId: string;
   appointmentDate: string; // "YYYY-MM-DD"
@@ -12,116 +12,100 @@ interface AppointmentPayload {
 }
 
 export const useAppointmentsHooks = () => {
+  const navigate=useNavigate();
   const api = useApi();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submit, setSubmit] = useState(false);
 
+  // ----------------------
+  // Create consultation appointment
+  // ----------------------
   const createAppointment = async (payload: AppointmentPayload) => {
     try {
       setLoading(true);
       setError(null);
-
       const response = await api.post(
         `${import.meta.env.VITE_SERVER_URL}/api/appointment`,
         payload
       );
       return response.appointment;
     } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to book appointment"
-      );
-      toast.error(
-        err.response?.data?.message ||
-        err.message ||
-        "Error booking appointment"
-      );
+      handleAxiosError(err);
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  // 📌 Get User’s Appointments
-  const getUserAppointments: () => Promise<{
+  // ----------------------
+  // Get all consultations for logged-in user
+  // ----------------------
+  const getUserAppointments = async (): Promise<{
     appointments: any[];
     routineAppointments: any[];
-  }> = async () => {
+  }> => {
     try {
       setLoading(true);
       setError(null);
-
       const data = await api.get(
         `${import.meta.env.VITE_SERVER_URL}/api/appointment/consultations/user`
       );
-
-      console.log("User Appointments Data:", data); // Debug log
-
       return data;
     } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to fetch appointments"
-      );
-      toast.error(
-        err.response?.data?.message ||
-        err.message ||
-        "Error fetching appointments"
-      );
+      handleAxiosError(err);
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  // 📌 Get Expert’s Appointments
-  const getExpertAppointments: () => Promise<{
+  // ----------------------
+  // Get all consultations for expert
+  // ----------------------
+  const getExpertAppointments = async (): Promise<{
     appointments: any[];
     routineAppointments: any[];
-  }> = async () => {
+  }> => {
     try {
       setLoading(true);
       setError(null);
-
       const data = await api.get(
-        `${import.meta.env.VITE_SERVER_URL
-        }/api/appointment/consultations/expert`
+        `${import.meta.env.VITE_SERVER_URL}/api/appointment/consultations/expert`
       );
-      console.log("Expert Appointments Data:", data); // Debug log
       return data;
     } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to fetch appointments"
-      );
-      toast.error(
-        err.response?.data?.message ||
-        err.message ||
-        "Error fetching appointments"
-      );
+      handleAxiosError(err);
       throw err;
     } finally {
       setLoading(false);
     }
   };
-  // 📌 Get Appointment by Meet ID
-  const getAppointmentByMeetId = async (meetId: string): Promise<{ appointment: any; linkExpired: boolean }> => {
+
+  // ----------------------
+  // Get appointment by meet ID
+  // ----------------------
+  const getAppointmentByMeetId = async (meetId: string) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await api.get(`${import.meta.env.VITE_SERVER_URL}/api/appointment/consultation/${meetId}`);
-      return response.data;
+      const response = await api.get(
+        `${import.meta.env.VITE_SERVER_URL}/api/appointment/consultations/${meetId}`
+      );
+
+      // response should be { appointment: {...}, linkExpired: false }
+      return response;
     } catch (err: any) {
       setError(
-        err.response?.data?.message || err.message || "Failed to fetch appointment by Meet ID"
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to fetch appointment by Meet ID"
       );
       toast.error(
-        err.response?.data?.message || err.message || "Error fetching appointment by Meet ID"
+        err.response?.data?.message ||
+        err.message ||
+        "Error fetching appointment by Meet ID"
       );
       throw err;
     } finally {
@@ -129,7 +113,56 @@ export const useAppointmentsHooks = () => {
     }
   };
 
-  // 📌 Get Routine Appointment By ID (typed)
+  // ----------------------
+  // Update status of an appointment
+  // ----------------------
+  const updateAppointmentStatus = async (
+    appointmentId: string,
+    status: "Accepted" | "Rejected"
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await api.patch(
+        `${import.meta.env.VITE_SERVER_URL}/api/appointment/consultations/${appointmentId}/status?status=${status}`,
+        {}
+      );
+
+      toast.success(`Appointment ${status.toLowerCase()} successfully`);
+      navigate("/doctor/appointments")
+      return res.data; // updated appointment object
+    } catch (err: any) {
+      handleAxiosError(err);
+      toast.error("Error updating appointment status");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ----------------------
+  // Verify meeting link by meetId
+  // ----------------------
+  const verifyMeetLink = async (meetId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await api.get(
+        `${import.meta.env.VITE_SERVER_URL}/api/appointment/verify/${meetId}`
+      );
+      return data; // { message: "success" | "expired" }
+    } catch (err: any) {
+      handleAxiosError(err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ----------------------
+  // Get Routine Appointment By ID (typed)
+  // ----------------------
   const getRoutineAppointmentById = async (
     id: string
   ): Promise<{ routineAppointment: RoutineAppointment }> => {
@@ -139,18 +172,17 @@ export const useAppointmentsHooks = () => {
       const data = await api.get(
         `${import.meta.env.VITE_SERVER_URL}/api/appointment/routine/${id}`
       );
-      console.log("Fetched Routine Appointment:", data);
       return data.routineAppointment;
     } catch (err: any) {
       setError(
         err.response?.data?.message ||
-          err.message ||
-          "Failed to fetch routine appointment"
+        err.message ||
+        "Failed to fetch routine appointment"
       );
       toast.error(
         err.response?.data?.message ||
-          err.message ||
-          "Error fetching routine appointment"
+        err.message ||
+        "Error fetching routine appointment"
       );
       throw err;
     } finally {
@@ -158,38 +190,9 @@ export const useAppointmentsHooks = () => {
     }
   };
 
-  // 📌 Get Consultation Appointment By ID
-  const getConsultationAppointmentById = async (id: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await api.get(
-        `${import.meta.env.VITE_SERVER_URL}/api/appointment/consultation/${id}`
-      );
-      return data;
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          err.message ||
-          "Failed to fetch consultation appointment"
-      );
-      toast.error(
-        err.response?.data?.message ||
-          err.message ||
-          "Error fetching consultation appointment"
-      );
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /**
-   * Share routine with PDF and routineResponse data.
-   * @param id Routine appointment ID
-   * @param pdfBlob PDF file (Blob)
-   * @param routineResponse Object containing sharedRoutine, doctorNotes, updatedAt, status
-   */
+  // ----------------------
+  // Share routine with PDF and routineResponse data
+  // ----------------------
   const shareRoutineAppointment = async (id: string, pdfBlob: Blob) => {
     try {
       setSubmit(true);
@@ -199,9 +202,7 @@ export const useAppointmentsHooks = () => {
       formData.append("routineResponse", pdfBlob, "routine.pdf");
 
       const response = await api.patch(
-        `${
-          import.meta.env.VITE_SERVER_URL
-        }/api/appointment/routine/${id}/response`,
+        `${import.meta.env.VITE_SERVER_URL}/api/appointment/routine/${id}/response`,
         formData,
         {
           headers: {
@@ -217,6 +218,9 @@ export const useAppointmentsHooks = () => {
     }
   };
 
+  // ----------------------
+  // Return everything from the hook
+  // ----------------------
   return {
     loading,
     error,
@@ -227,8 +231,9 @@ export const useAppointmentsHooks = () => {
     getUserAppointments,
     getExpertAppointments,
     getRoutineAppointmentById,
-    getConsultationAppointmentById,
     shareRoutineAppointment,
-    getAppointmentByMeetId
+    getAppointmentByMeetId,
+    verifyMeetLink,
+    updateAppointmentStatus,
   };
 };

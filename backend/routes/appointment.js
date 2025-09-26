@@ -1,10 +1,13 @@
+
+"/api/appointment"
+
 import express from "express";
 import {
   getUserAppointments,
   getExpertAppointments,
   getAppointmentByMeetId,
   createAppointment,
-  updateAppointmentStatusViaEmail,
+  updateAppointmentStatus,
   routineResponseController,
   verifyMeetLink,
   getRoutineAppointmentById,
@@ -29,6 +32,24 @@ router.post(
   checkPrakrithiAnalysisExists,
   createAppointment
 );
+// Get all appointments for logged-in user
+router.get("/consultations/user", checkUserLogin, getUserAppointments);
+
+// Get all appointments for logged-in doctor/expert
+router.get("/consultations/expert", checkExpertLogin, getExpertAppointments);
+
+// Get single appointment by meetId (link check included)
+router.get("/consultations/:meetId", getAppointmentByMeetId);
+
+// Update appointment status (accept/reject)
+router.patch(
+  "/consultations/:appointmentId/status",checkExpertLogin,updateAppointmentStatus
+);
+
+router.get("/consultations/verify",verifyMeetLink)
+
+// Get routine appointment by ID
+router.get("/routine/:id", isLoggedIn, wrapAsync(getRoutineAppointmentById));
 
 // Create routine appointment (with validation and Prakrithi analysis check)
 router.post(
@@ -47,25 +68,6 @@ router.patch(
   wrapAsync(checkRoutineAppointmentDoctorAuth), // <-- Place before file upload
   wrapAsync(handleRoutineResponseCloudinaryUpload),
   wrapAsync(routineResponseController)
-);
-
-// Get routine appointment by ID
-router.get("/routine/:id", isLoggedIn, wrapAsync(getRoutineAppointmentById));
-
-// Get all appointments for logged-in user
-
-router.get("/consultations/user", checkUserLogin, getUserAppointments);
-
-// Get all appointments for logged-in doctor/expert
-router.get("/consultations/expert", checkExpertLogin, getExpertAppointments);
-
-// Get single appointment by meetId (link check included)
-router.get("/consultation/:meetId", getAppointmentByMeetId);
-
-// Update appointment status (accept/reject)
-router.patch(
-  "/consultation/:appointmentId/status",
-  updateAppointmentStatusViaEmail
 );
 
 router.get("/verify/:meetId", verifyMeetLink);
