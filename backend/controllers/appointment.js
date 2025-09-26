@@ -5,6 +5,7 @@ import wrapAsync from "../utils/wrapAsync.js";
 import RoutineAppointment from "../models/RoutineAppointment/RoutineAppointment.js";
 import ExpressError from "../utils/expressError.js";
 import Expert from "../models/Expert/Expert.js";
+import { sendAppointmentMail } from "../utils/sendAppointmentMail.js";
 
 const nanoid = customAlphabet(
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
@@ -46,8 +47,8 @@ export const createAppointment = wrapAsync(async (req, res) => {
   }
 
   const meetId = nanoid();
-  const link = `http://localhost:5173/livestreaming/${meetId}`;
-  const linkExpiresAt = new Date(datePart.getTime() + 24 * 60 * 60 * 1000);//24 hours of given time
+  const link = `${process.env.VITE_API_URL || "http://localhost:5173"}/livestreaming/${meetId}`;
+  const linkExpiresAt = new Date(datePart.getTime() + 24 * 60 * 60 * 1000); // 24 hours
 
   const appointment = await Appointment.create({
     user: userId,
@@ -61,16 +62,21 @@ export const createAppointment = wrapAsync(async (req, res) => {
   });
 
   // Send confirmation email to expert
-  // try {
-  //   const expert = await Expert.findById(expertId);
-  //   if (expert) {
-  //     await sendAppointmentConfirmationMail(expert, appointment);
-  //   } else {
-  //     console.warn("Expert not found, email not sent.");
-  //   }
-  // } catch (err) {
-  //   console.error("Failed to send appointment confirmation email:", err);
-  // }
+  try {
+    const expert = await Expert.findById(expertId);
+    if (!expert) {
+      console.warn("Expert not found, email not sent.");
+    } else if (!expert.email) {
+      console.warn(`Expert ${expert.name} has no email defined, skipping email.`);
+    } else {
+      console.log("Sending appointment email to expert:", expert.email);
+      await sendAppointmentMail(expert, appointment, req.user.name);
+      console.log("Appointment confirmation email sent successfully.");
+    }
+  } catch (err) {
+    console.error("Failed to send appointment confirmation email:", err);
+  }
+
 
   res.status(201).json({
     success: true,
@@ -92,8 +98,6 @@ export const getUserAppointments = wrapAsync(async (req, res) => {
     .populate("doctorId", "name email profile")
     .populate("prakrithiAnalysis")
     .sort({ updatedAt: -1 });
-
-  console.log({ appointments, routineAppointments });
   res.status(200).json({ appointments, routineAppointments });
 });
 
