@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import useApi from "../useApi/useApi";
 import { RoutineAppointment } from "./useAppointmentHook.types";
 import { handleAxiosError } from "@/utils/handleAxiosError";
-
+import { useNavigate } from "react-router-dom";
 interface AppointmentPayload {
   expertId: string;
   appointmentDate: string; // "YYYY-MM-DD"
@@ -12,12 +12,15 @@ interface AppointmentPayload {
 }
 
 export const useAppointmentsHooks = () => {
+  const navigate=useNavigate();
   const api = useApi();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submit, setSubmit] = useState(false);
 
+  // ----------------------
   // Create consultation appointment
+  // ----------------------
   const createAppointment = async (payload: AppointmentPayload) => {
     try {
       setLoading(true);
@@ -35,7 +38,9 @@ export const useAppointmentsHooks = () => {
     }
   };
 
+  // ----------------------
   // Get all consultations for logged-in user
+  // ----------------------
   const getUserAppointments = async (): Promise<{
     appointments: any[];
     routineAppointments: any[];
@@ -55,7 +60,9 @@ export const useAppointmentsHooks = () => {
     }
   };
 
+  // ----------------------
   // Get all consultations for expert
+  // ----------------------
   const getExpertAppointments = async (): Promise<{
     appointments: any[];
     routineAppointments: any[];
@@ -75,26 +82,68 @@ export const useAppointmentsHooks = () => {
     }
   };
 
-  // Get consultation appointment by meetId
-  const getAppointmentByMeetId = async (
-    meetId: string
-  ): Promise<{ appointment: any; linkExpired: boolean }> => {
+  // ----------------------
+  // Get appointment by meet ID
+  // ----------------------
+  const getAppointmentByMeetId = async (meetId: string) => {
     try {
       setLoading(true);
       setError(null);
+
       const response = await api.get(
         `${import.meta.env.VITE_SERVER_URL}/api/appointment/consultations/${meetId}`
       );
-      return response.data;
+
+      // response should be { appointment: {...}, linkExpired: false }
+      return response;
     } catch (err: any) {
-      handleAxiosError(err);
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to fetch appointment by Meet ID"
+      );
+      toast.error(
+        err.response?.data?.message ||
+        err.message ||
+        "Error fetching appointment by Meet ID"
+      );
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
+  // ----------------------
+  // Update status of an appointment
+  // ----------------------
+  const updateAppointmentStatus = async (
+    appointmentId: string,
+    status: "Accepted" | "Rejected"
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await api.patch(
+        `${import.meta.env.VITE_SERVER_URL}/api/appointment/consultations/${appointmentId}/status?status=${status}`,
+        {}
+      );
+
+      toast.success(`Appointment ${status.toLowerCase()} successfully`);
+      navigate("/doctor/appointments")
+      return res.data; // updated appointment object
+    } catch (err: any) {
+      handleAxiosError(err);
+      toast.error("Error updating appointment status");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ----------------------
   // Verify meeting link by meetId
+  // ----------------------
   const verifyMeetLink = async (meetId: string) => {
     try {
       setLoading(true);
@@ -111,7 +160,9 @@ export const useAppointmentsHooks = () => {
     }
   };
 
-  // 📌 Get Routine Appointment By ID (typed)
+  // ----------------------
+  // Get Routine Appointment By ID (typed)
+  // ----------------------
   const getRoutineAppointmentById = async (
     id: string
   ): Promise<{ routineAppointment: RoutineAppointment }> => {
@@ -124,10 +175,14 @@ export const useAppointmentsHooks = () => {
       return data.routineAppointment;
     } catch (err: any) {
       setError(
-        err.response?.data?.message || err.message || "Failed to fetch routine appointment"
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to fetch routine appointment"
       );
       toast.error(
-        err.response?.data?.message || err.message || "Error fetching routine appointment"
+        err.response?.data?.message ||
+        err.message ||
+        "Error fetching routine appointment"
       );
       throw err;
     } finally {
@@ -135,11 +190,9 @@ export const useAppointmentsHooks = () => {
     }
   };
 
-  /**
-   * Share routine with PDF and routineResponse data.
-   * @param id Routine appointment ID
-   * @param pdfBlob PDF file (Blob)
-   */
+  // ----------------------
+  // Share routine with PDF and routineResponse data
+  // ----------------------
   const shareRoutineAppointment = async (id: string, pdfBlob: Blob) => {
     try {
       setSubmit(true);
@@ -165,6 +218,9 @@ export const useAppointmentsHooks = () => {
     }
   };
 
+  // ----------------------
+  // Return everything from the hook
+  // ----------------------
   return {
     loading,
     error,
@@ -178,5 +234,6 @@ export const useAppointmentsHooks = () => {
     shareRoutineAppointment,
     getAppointmentByMeetId,
     verifyMeetLink,
+    updateAppointmentStatus,
   };
 };

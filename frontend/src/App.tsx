@@ -71,6 +71,9 @@ import MeetingManagement from "./pages/MeetingManagement/MeetingManagement";
 import UserAppointmentsPage from "./pages/User/UserAppointments/UserAppointmentsPage";
 import ConsultationDetails from "./pages/Expert/ConsultationDetails/ConsultationDetails";
 import RoutinesConsultationDetails from "./pages/Expert/RoutinesConsultationDetails/RoutinesConsultationDetails";
+import  AppointmentDetailsPage from "./pages/DoctorAppointments/AppointmentDetailsPage"
+import DoctorAppointmentsPage from "./pages/DoctorAppointments/DoctorAppointmentsPage"
+
 const App = () => {
   const { isLoggedIn } = useAuth();
 
@@ -180,6 +183,10 @@ const App = () => {
               path="/expert/change-password"
               element={<ExpertChangePassword />}
             />
+
+
+              <Route path="/doctor/appointments" element={<DoctorAppointmentsPage />} />
+              <Route path="/doctor/appointments/:id" element={<AppointmentDetailsPage />} />
             {/* Doctor Appointment Routes */}
             {/* <Route path="/u/appointments" element={<DoctorAppointments />} /> */}
 
