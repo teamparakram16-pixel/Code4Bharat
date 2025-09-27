@@ -26,7 +26,7 @@ export const sendAppointmentMail = async (doctor, appointment, patientName) => {
   <div style="font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f6f4ef; color: #3e3e3e; padding: 20px;">
     <div style="max-width: 600px; margin: auto; background-color: #ffffff; border: 1px solid #ddd4c6; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); padding: 30px;">
       
-      <h2 style="color: #4b6043;">Hello Dr. ${doctor.name},</h2>
+      <h2 style="color: #4b6043;">Hello Dr. ${doctor.username},</h2>
       
       <p style="font-size: 16px; line-height: 1.6;">${patientName} has booked a new appointment.</p>
 
