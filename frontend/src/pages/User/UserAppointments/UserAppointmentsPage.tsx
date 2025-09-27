@@ -12,6 +12,8 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { motion } from "framer-motion";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import useUserAppointments from "@/hooks/useUserAppointments/useUserAppointments";
 import ConsultationAppointmentCard from "@/components/AppointmentCards/ConsultationAppointmentCard";
 import RoutineAppointmentCard from "@/components/AppointmentCards/RoutineAppointmentCard";
@@ -22,6 +24,7 @@ const UserAppointmentsPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { role } = useAuth();
+  const navigate = useNavigate();
 
   const {
     loading,
@@ -31,33 +34,54 @@ const UserAppointmentsPage: React.FC = () => {
     setRoutineAppointments,
   } = useUserAppointments();
 
-  console.log("Consultations:", consultations);
-  console.log("Routine Appointments:", routineAppointments);
-
-  const { getUserAppointments, getExpertAppointments } = useAppointmentsHooks();
+  const { getUserAppointments, getExpertAppointments, verifyMeetLink } =
+    useAppointmentsHooks();
 
   const [activeTab, setActiveTab] = useState(0);
 
+  // fetch appointments based on role
   useEffect(() => {
     const fetchAppointments = async () => {
-      if (role === "user") {
-        const { appointments, routineAppointments } =
-          await getUserAppointments();
+      try {
+        const fetchFn =
+          role === "user" ? getUserAppointments : getExpertAppointments;
+
+        const { appointments, routineAppointments } = await fetchFn();
+
         setConsultations(appointments || []);
         setRoutineAppointments(routineAppointments || []);
-      } else {
-        const { appointments, routineAppointments } =
-          await getExpertAppointments();
-        setConsultations(appointments || []);
-        setRoutineAppointments(routineAppointments || []);
+      } catch (err) {
+        toast.error("Failed to fetch appointments");
       }
     };
+
     fetchAppointments();
   }, [role]);
 
+  // handle tab change
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
+
+  // handle join meeting
+  const handleJoinMeeting = async (appointment: any) => {
+    console.log("Join meeting clicked:", appointment); 
+
+    try {
+      const res = await verifyMeetLink(appointment.meetId);
+      console.log("verifyMeetLink response:", res);
+
+      if (res.message === "success") {
+        navigate(`/livestreaming/${appointment.meetId}`, {
+          state: { appointment },
+        });
+      } else {
+        toast.error(res.message || "Unable to join meeting");
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Meeting not available");
+    }
+  };  
 
   return (
     <Container maxWidth="lg" sx={{ py: 4, mt: 8 }}>
@@ -68,11 +92,11 @@ const UserAppointmentsPage: React.FC = () => {
       >
         <Box mb={4}>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
-            My Appointments
+            My Appointments 
           </Typography>
         </Box>
 
-        {/* Tabs for Consultations and Routines */}
+        {/* Tabs */}
         <Paper sx={{ mb: 3 }}>
           <Tabs
             value={activeTab}
@@ -111,7 +135,7 @@ const UserAppointmentsPage: React.FC = () => {
                         appointment={appointment}
                         onCancel={() => {}}
                         onReschedule={() => {}}
-                        onJoinMeeting={() => {}}
+                        onJoinMeeting={() => handleJoinMeeting(appointment)}
                       />
                     ))}
                   </Box>

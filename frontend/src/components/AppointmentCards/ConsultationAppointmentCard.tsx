@@ -19,7 +19,6 @@ import {
 } from "@mui/icons-material";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 
 interface ConsultationAppointmentCardProps {
   appointment: any;
@@ -29,14 +28,13 @@ interface ConsultationAppointmentCardProps {
     newDate: string,
     newTime: string
   ) => void;
-  onJoinMeeting?: (meetingLink: string) => void;
+  onJoinMeeting?: (appointment: any) => void;
 }
 
 const ConsultationAppointmentCard: React.FC<
   ConsultationAppointmentCardProps
-> = ({ appointment, onCancel, onReschedule }) => {
+> = ({ appointment, onCancel, onReschedule, onJoinMeeting }) => {
   const theme = useTheme();
-  const navigate = useNavigate();
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -72,10 +70,6 @@ const ConsultationAppointmentCard: React.FC<
       default:
         return status;
     }
-  };
-
-  const handleJoinMeeting = () => {
-    navigate(`/livestreaming/${appointment.meetId}`);
   };
 
   const handleCancel = () => {
@@ -191,7 +185,7 @@ const ConsultationAppointmentCard: React.FC<
               color="primary"
               size="small"
               startIcon={<VideoCall />}
-              onClick={handleJoinMeeting}
+              onClick={() => onJoinMeeting?.(appointment)} // ✅ use callback
             >
               Join Meeting
             </Button>
