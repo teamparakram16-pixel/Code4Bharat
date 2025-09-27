@@ -70,7 +70,7 @@ export const createAppointment = wrapAsync(async (req, res) => {
       console.warn(`Expert ${expert.name} has no email defined, skipping email.`);
     } else {
       console.log("Sending appointment email to expert:", expert.email);
-      await sendAppointmentMail(expert, appointment, req.user.name);
+      await sendAppointmentMail(expert, appointment, req.user.username);
       console.log("Appointment confirmation email sent successfully.");
     }
   } catch (err) {
@@ -156,10 +156,14 @@ export const updateAppointmentStatus = wrapAsync(async (req, res) => {
 // Verify meeting link
 export const verifyMeetLink = wrapAsync(async (req, res) => {
   const { meetId } = req.params;
+  console.log(meetId)
   const appointment = await Appointment.findOne({ meetId });
+  console.log(appointment)
   if (!appointment)
     return res.status(404).json({ message: "No such appointment found" });
-
+  if (appointment.status=='Rejected'){
+    return res.status(403).json({ message: "Rejected" });
+  }
   if (appointment.linkExpiresAt < new Date())
     return res.status(403).json({ message: "expired" });
 

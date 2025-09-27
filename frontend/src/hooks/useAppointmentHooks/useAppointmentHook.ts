@@ -144,21 +144,38 @@ export const useAppointmentsHooks = () => {
   // ----------------------
   // Verify meeting link by meetId
   // ----------------------
-  const verifyMeetLink = async (meetId: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await api.get(
-        `${import.meta.env.VITE_SERVER_URL}/api/appointment/verify/${meetId}`
-      );
-      return data; // { message: "success" | "expired" }
-    } catch (err: any) {
-      handleAxiosError(err);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+// verify meeting link by meetId
+// inside useAppointmentHook.ts
+const verifyMeetLink = async (meetId: string) => {
+  try {
+    console.log("verifyMeetLink called with:", meetId);
+
+    setLoading(true);
+    setError(null);
+
+    const res = await api.get(
+      `${import.meta.env.VITE_SERVER_URL}/api/appointment/verify/${meetId}`
+    );
+
+    return res.data; // 👈 return only the payload
+  } catch (err: any) {
+    setError(
+      err.response?.data?.message ||
+        err.message ||
+        "Failed to verify meeting link"
+    );
+    toast.error(
+      err.response?.data?.message ||
+        err.message ||
+        "Error verifying meeting link"
+    );
+    throw err;
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   // ----------------------
   // Get Routine Appointment By ID (typed)
